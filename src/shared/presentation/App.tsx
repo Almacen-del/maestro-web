@@ -15,6 +15,7 @@ import {InventoryReportsSection} from "./InventoryReportsSection";
 import type {ReportPlatform} from "./InventoryReportsSection";
 import {DiscardsSection} from "./DiscardsSection";
 import {MigrationValidationSection} from "./MigrationValidationSection";
+import {ModuleMapSection} from "./ModuleMapSection";
 import {UsersSection} from "./UsersSection";
 import "./app.css";
 
@@ -73,7 +74,7 @@ export function App({repository, reportPlatform}: AppProps) {
   const [password, setPassword] = useState("");
   const [user, setUser] = useState<MonitorUser>();
   const [activeSection, setActiveSection] = useState<
-    "MONITOR" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
+    "MONITOR" | "MAP" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
   >("MONITOR");
   const [journeys, setJourneys] = useState<readonly MonitorJourney[]>([]);
   const [selectedJourneyId, setSelectedJourneyId] = useState<string>();
@@ -482,6 +483,18 @@ export function App({repository, reportPlatform}: AppProps) {
           >
             Conteos
           </button>
+          <button
+            className={activeSection === "MAP" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
+            type="button"
+            onClick={() => {
+              setReviewDialog(undefined);
+              setReassignmentDialog(undefined);
+              setReleaseDialog(undefined);
+              setActiveSection("MAP");
+            }}
+          >
+            Mapa
+          </button>
           {user.canReview && (
             <button
               className={activeSection === "DISCARDS" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
@@ -597,6 +610,14 @@ export function App({repository, reportPlatform}: AppProps) {
         <UsersSection repository={repository} currentUser={user} />
       ) : activeSection === "REPORTS" && user.canReview ? (
         <InventoryReportsSection repository={repository} currentUser={user} platform={reportPlatform} />
+      ) : activeSection === "MAP" ? (
+        <ModuleMapSection
+          snapshot={snapshot}
+          loading={loading}
+          journeys={journeys}
+          selectedJourneyId={selectedJourneyId}
+          onSelectJourney={(journeyId) => startMonitoring(user, journeyId)}
+        />
       ) : activeSection === "CATALOG" && user.canManageCatalog ? (
         <CatalogSection
           repository={repository}
