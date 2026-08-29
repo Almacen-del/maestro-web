@@ -18,6 +18,24 @@ interface InventoryReportsSectionProps {
 export interface ReportPlatform {
   readonly desktopOAuth: boolean;
   readonly openExternalUrl: (url: string) => Promise<boolean>;
+  readonly prepareGoogleDriveOAuth?: () => Promise<{
+    readonly redirectUri: string;
+    readonly codeChallenge: string;
+    readonly codeVerifier: string;
+  }>;
+  readonly openGoogleDriveOAuth?: (
+    authorizationUrl: string,
+    preparation: {readonly redirectUri: string; readonly codeVerifier: string},
+  ) => Promise<never>;
+  readonly consumeGoogleDriveOAuthCallback?: () => {
+    readonly ok: true;
+    readonly state: string;
+    readonly authorizationCode: string;
+    readonly codeVerifier: string;
+    readonly redirectUri: string;
+    readonly selectedFileIds: readonly [string];
+    readonly grantedScope: "https://www.googleapis.com/auth/drive.file";
+  } | {readonly ok: false; readonly errorCode: "CANCELLED" | "INVALID_CALLBACK" | "EXPIRED"} | undefined;
 }
 
 const statusLabels: Record<InventoryReportStatus, string> = {
@@ -85,16 +103,41 @@ export function InventoryReportsSection({repository, currentUser, platform}: Inv
     }
   }, []);
 
+  useEffect(() => {
+    const callback = platform?.consumeGoogleDriveOAuthCallback?.();
+    if (!callback || currentUser.role !== "ADMINISTRADOR") return;
+    if (!callback.ok) {
+      setError(callback.errorCode === "CANCELLED"
+        ? "La autorizacion fue cancelada."
+        : callback.errorCode === "EXPIRED"
+          ? "La autorizacion expiro. Inicia el proceso de nuevo."
+          : "Google devolvio una respuesta de autorizacion no valida.");
+      return;
+    }
+    setDriveBusy(true);
+    void repository.completeGoogleDriveOAuth(callback)
+      .then((status) => {
+        setDriveStatus(status);
+        setNotice("Recurso autorizado mediante Google Picker.");
+      })
+      .catch((completionError: unknown) => {
+        setError(completionError instanceof Error
+          ? completionError.message : "No fue posible completar la conexion con Google Drive.");
+      })
+      .finally(() => setDriveBusy(false));
+  }, []);
+
   const connectDrive = async (
     selectionKind: GoogleDriveSelectionKind,
     reconnect = false,
   ): Promise<void> => {
-    if (!desktopOAuth || currentUser.role !== "ADMINISTRADOR" || driveBusy) return;
+    const webOAuth = platform?.prepareGoogleDriveOAuth && platform.openGoogleDriveOAuth;
+    if ((!desktopOAuth && !webOAuth) || currentUser.role !== "ADMINISTRADOR" || driveBusy) return;
     if (reconnect && !window.confirm(
       "Se revocara la autorizacion actual y deberas seleccionar nuevamente plantilla y carpeta. ¿Continuar?",
     )) return;
     const desktop = window.viveroFoundation;
-    if (!desktop?.prepareGoogleDriveOAuth || !desktop.openGoogleDriveOAuth) {
+    if (desktopOAuth && (!desktop?.prepareGoogleDriveOAuth || !desktop.openGoogleDriveOAuth)) {
       setError("La conexion segura con el navegador del sistema no esta disponible.");
       return;
     }
@@ -106,14 +149,25 @@ export function InventoryReportsSection({repository, currentUser, platform}: Inv
         const revoked = await repository.revokeGoogleDriveOAuth(crypto.randomUUID());
         setDriveStatus(revoked);
       }
-      const preparation = await desktop.prepareGoogleDriveOAuth();
+      if (!desktopOAuth) {
+        const preparation = await platform!.prepareGoogleDriveOAuth!();
+        const start = await repository.startGoogleDriveOAuth({
+          selectionKind,
+          redirectUri: preparation.redirectUri,
+          codeChallenge: preparation.codeChallenge,
+          idempotencyKey: crypto.randomUUID(),
+        });
+        await platform!.openGoogleDriveOAuth!(start.authorizationUrl, preparation);
+        return;
+      }
+      const preparation = await desktop!.prepareGoogleDriveOAuth();
       const start = await repository.startGoogleDriveOAuth({
         selectionKind,
         redirectUri: preparation.redirectUri,
         codeChallenge: preparation.codeChallenge,
         idempotencyKey: crypto.randomUUID(),
       });
-      const callback = await desktop.openGoogleDriveOAuth(preparation.localSessionId, start.authorizationUrl);
+      const callback = await desktop!.openGoogleDriveOAuth(preparation.localSessionId, start.authorizationUrl);
       if (!callback.ok) {
         throw new Error(callback.errorCode === "CANCELLED"
           ? "La autorizacion fue cancelada."
@@ -222,22 +276,20 @@ export function InventoryReportsSection({repository, currentUser, platform}: Inv
             <strong>{driveStatus ? driveStateLabels[driveStatus.state] : "Consultando estado..."}</strong>
             <span>Plantilla: {driveStatus?.templateName ?? "Sin seleccionar"}</span>
             <span>Carpeta de salida: {driveStatus?.folderName ?? "Sin seleccionar"}</span>
-            <small>{desktopOAuth
-              ? "La autorizacion se abre en el navegador del sistema. Los tokens nunca se muestran."
-              : "Conectar, seleccionar recursos y reconectar Google Drive requieren Vivero Maestro para Windows. OAuth web está pendiente; los informes y la revocación siguen disponibles."}</small>
+            <small>La autorizacion se abre con Google Picker. Los tokens nunca se muestran.</small>
           </div>
           <div className="review-actions">
-            {desktopOAuth && <button className="button" type="button" disabled={driveBusy} onClick={() => void connectDrive("PLANTILLA")}>
+            <button className="button" type="button" disabled={driveBusy} onClick={() => void connectDrive("PLANTILLA")}>
               {driveStatus?.state === "NO_CONFIGURADO" || !driveStatus ? "Conectar Google Drive" : "Seleccionar plantilla"}
-            </button>}
-            {desktopOAuth && <button className="button button--secondary" type="button" disabled={driveBusy} onClick={() => void connectDrive("CARPETA_SALIDA")}>
+            </button>
+            <button className="button button--secondary" type="button" disabled={driveBusy} onClick={() => void connectDrive("CARPETA_SALIDA")}>
               Seleccionar carpeta de salida
-            </button>}
+            </button>
             {driveStatus && driveStatus.state !== "NO_CONFIGURADO" && driveStatus.state !== "REVOCADO" && (
               <>
-                {desktopOAuth && <button className="button button--secondary" type="button" disabled={driveBusy} onClick={() => void connectDrive("PLANTILLA", true)}>
+                <button className="button button--secondary" type="button" disabled={driveBusy} onClick={() => void connectDrive("PLANTILLA", true)}>
                   Reconectar
-                </button>}
+                </button>
                 <button className="button button--danger" type="button" disabled={driveBusy} onClick={() => void revokeDrive()}>
                   Revocar autorizacion
                 </button>

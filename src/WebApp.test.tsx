@@ -13,6 +13,7 @@ const admin: MonitorUser = {id: "admin-prueba", displayName: "Admin Prueba", rol
 function repository(user = admin): MonitorRepository {
   return Object.assign(new DisabledMonitorRepository(), {
     environment: "EMULATOR" as const, emulatorEnabled: true,
+    restoreSession: vi.fn().mockResolvedValue(undefined),
     signIn: vi.fn().mockResolvedValue(user),
     listActiveJourneys: vi.fn().mockResolvedValue([]),
     listInventoryReports: vi.fn().mockResolvedValue({informes: []}),
@@ -25,22 +26,30 @@ function repository(user = admin): MonitorRepository {
 afterEach(() => vi.restoreAllMocks());
 
 describe("Vivero Maestro Web", () => {
-  it("muestra acceso sin Electron y falla cerrado sin configuración", () => {
+  it("muestra acceso sin Electron y falla cerrado sin configuración", async () => {
     render(<WebApp repository={new DisabledMonitorRepository()} configurationError="Falta VITE_APP_ENV" />);
     expect(screen.getByText(/VERSIÓN WEB/)).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Falta VITE_APP_ENV");
-    expect(screen.getByRole("button", {name: "Iniciar sesión"})).toBeDisabled();
+    expect(await screen.findByRole("button", {name: "Iniciar sesión"})).toBeDisabled();
   });
   it("permite acceso y navegación administrativa mediante el repositorio existente", async () => {
     const repo = repository();
     render(<WebApp repository={repo} />);
     fireEvent.change(screen.getByLabelText("Correo"), {target: {value: "admin@prueba.local"}});
     fireEvent.change(screen.getByLabelText("Contraseña"), {target: {value: "Ficticia123"}});
-    fireEvent.click(screen.getByRole("button", {name: "Iniciar sesión"}));
+    fireEvent.click(await screen.findByRole("button", {name: "Iniciar sesión"}));
     expect(await screen.findByRole("button", {name: "Catálogo"})).toBeEnabled();
     expect(screen.getByRole("button", {name: "Jornadas"})).toBeEnabled();
     fireEvent.click(screen.getByRole("button", {name: "Usuarios"}));
     expect(await screen.findByRole("button", {name: "Crear usuario"})).toBeEnabled();
+  });
+  it("restaura una sesión web sin solicitar de nuevo la contraseña", async () => {
+    const repo = repository();
+    vi.mocked(repo.restoreSession).mockResolvedValue(admin);
+    render(<WebApp repository={repo} />);
+    expect(await screen.findByRole("button", {name: "Cerrar sesión"})).toBeEnabled();
+    expect(screen.getByText(/Admin Prueba · ADMINISTRADOR/)).toBeInTheDocument();
+    expect(repo.signIn).not.toHaveBeenCalled();
   });
   it("no expone administración a auxiliares", async () => {
     const user = {...admin, role: "AUXILIAR" as const, canReview: false, canManageUsers: false,
@@ -48,18 +57,20 @@ describe("Vivero Maestro Web", () => {
     render(<WebApp repository={repository(user)} />);
     fireEvent.change(screen.getByLabelText("Correo"), {target: {value: "auxiliar@prueba.local"}});
     fireEvent.change(screen.getByLabelText("Contraseña"), {target: {value: "Ficticia123"}});
-    fireEvent.click(screen.getByRole("button", {name: "Iniciar sesión"}));
+    fireEvent.click(await screen.findByRole("button", {name: "Iniciar sesión"}));
     await screen.findByRole("button", {name: "Cerrar sesión"});
     expect(screen.queryByRole("button", {name: "Usuarios"})).not.toBeInTheDocument();
     expect(screen.queryByRole("button", {name: "Catálogo"})).not.toBeInTheDocument();
   });
-  it("oculta OAuth desktop pero conserva estado y revocación confirmada", async () => {
+  it("ofrece OAuth web y conserva revocación confirmada", async () => {
     const repo = repository();
     vi.spyOn(window, "confirm").mockReturnValue(true);
     render(<InventoryReportsSection repository={repo} currentUser={admin} platform={webPlatform} />);
     await screen.findByText("Listo para generar informes");
-    expect(screen.getByText(/OAuth web está pendiente/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", {name: /Conectar|Seleccionar|Reconectar/})).not.toBeInTheDocument();
+    expect(screen.getByText(/Google Picker/)).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "Seleccionar plantilla"})).toBeEnabled();
+    expect(screen.getByRole("button", {name: "Seleccionar carpeta de salida"})).toBeEnabled();
+    expect(screen.getByRole("button", {name: "Reconectar"})).toBeEnabled();
     fireEvent.click(screen.getByRole("button", {name: "Revocar autorizacion"}));
     await screen.findByText("Autorizacion revocada");
     expect(repo.revokeGoogleDriveOAuth).toHaveBeenCalledOnce();

@@ -29,7 +29,7 @@ La salida está en `dist/` (ignorada); preview usa `http://127.0.0.1:4174`. No a
 - Mismas pantallas, roles y Callables para usuarios, catálogo, jornadas, conteos, descartes, migraciones e informes. Las escrituras siguen pasando por Functions.
 - Sesión gestionada por Firebase JS SDK y aislada por origen del navegador, distinta de Electron y Android. EMULATOR y PRODUCTION conservan nombres de aplicación Firebase diferentes. No se trasladan sesiones, contraseñas ni almacenamiento local de Windows.
 - Apertura de informes en una pestaña nueva: solo HTTPS en drive.google.com/docs.google.com, sin opener ni referrer.
-- Estado, reintento y revocación de Drive disponibles según permisos existentes. **Conexión, selección Picker y reconexión OAuth permanecen en Windows.** El cliente Desktop con callback loopback no es un cliente web; no se lo simula ni se guardan refresh tokens en el navegador. Migrar ese flujo requiere una etapa específica de OAuth web y revisión del backend.
+- La conexión, selección Picker, reconexión y revocación de Drive están preparadas para Web mediante OAuth con PKCE y retorno HTTPS. El navegador conserva temporalmente solo `state` y el verificador PKCE; el refresh token continúa exclusivamente en Secret Manager.
 - Diseño original reutilizado con ajustes de pantalla pequeña; no convierte Campo en una web ni implementa captura offline de Android.
 
 ## Publicación pendiente (no ejecutada)

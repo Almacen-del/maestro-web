@@ -777,14 +777,33 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   async signIn(email: string, password: string): Promise<MonitorUser> {
     try {
       const credential = await signInWithEmailAndPassword(this.auth, email.trim(), password);
-      const profile = await getDoc(doc(this.firestore, "usuarios", credential.user.uid));
+      return await this.loadUserProfile(credential.user.uid);
+    } catch (error) {
+      await this.auth.signOut();
+      throw new Error(error instanceof Error ? error.message : "No fue posible iniciar sesión.", {cause: error});
+    }
+  }
+
+  async restoreSession(): Promise<MonitorUser | undefined> {
+    await this.auth.authStateReady();
+    if (!this.auth.currentUser) return undefined;
+    try {
+      return await this.loadUserProfile(this.auth.currentUser.uid);
+    } catch (error) {
+      await this.auth.signOut();
+      throw new Error(error instanceof Error ? error.message : "No fue posible restaurar la sesión.", {cause: error});
+    }
+  }
+
+  private async loadUserProfile(userId: string): Promise<MonitorUser> {
+      const profile = await getDoc(doc(this.firestore, "usuarios", userId));
       if (!profile.exists()) throw new Error("La cuenta no tiene un perfil operativo.");
       if (profile.data().activo !== true) throw new Error("La cuenta está inactiva.");
       const roles = profile.data().roles;
       const role = Array.isArray(roles) ? roles.find(isRole) : undefined;
       if (!role) throw new Error("La cuenta no tiene un rol operativo.");
       return {
-        id: credential.user.uid,
+        id: userId,
         displayName: typeof profile.data().nombreVisible === "string"
           ? profile.data().nombreVisible
           : "Usuario",
@@ -796,10 +815,6 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         canManageUsers: role === "ADMINISTRADOR",
         canManageCatalog: role === "ADMINISTRADOR",
       };
-    } catch (error) {
-      await this.auth.signOut();
-      throw new Error(error instanceof Error ? error.message : "No fue posible iniciar sesión.", {cause: error});
-    }
   }
 
   async signOut(): Promise<void> {
@@ -1923,6 +1938,10 @@ export class DisabledMonitorRepository implements MonitorRepository {
   readonly emulatorEnabled = false;
 
   constructor(private readonly configurationError = "Configuración Firebase inválida. La aplicación permanece desconectada.") {}
+
+  async restoreSession(): Promise<MonitorUser | undefined> {
+    return undefined;
+  }
 
   async signIn(): Promise<MonitorUser> {
     throw new Error(this.configurationError);

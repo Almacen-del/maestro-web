@@ -74,7 +74,7 @@ export function App({repository, reportPlatform}: AppProps) {
   const [user, setUser] = useState<MonitorUser>();
   const [activeSection, setActiveSection] = useState<
     "MONITOR" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
-  >("MONITOR");
+  >(() => new URLSearchParams(window.location.search).has("code") ? "REPORTS" : "MONITOR");
   const [journeys, setJourneys] = useState<readonly MonitorJourney[]>([]);
   const [selectedJourneyId, setSelectedJourneyId] = useState<string>();
   const [snapshot, setSnapshot] = useState<MonitorSnapshot>();
@@ -95,6 +95,30 @@ export function App({repository, reportPlatform}: AppProps) {
   const unsubscribeRef = useRef<MonitorUnsubscribe | undefined>(undefined);
 
   useEffect(() => () => unsubscribeRef.current?.(), []);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    void repository.restoreSession()
+      .then(async (restoredUser) => {
+        if (!active || !restoredUser) return;
+        const activeJourneys = await repository.listActiveJourneys();
+        if (!active) return;
+        setUser(restoredUser);
+        setJourneys(activeJourneys);
+        if (activeJourneys.length === 1 && activeJourneys[0]) {
+          startMonitoring(restoredUser, activeJourneys[0].id);
+        }
+      })
+      .catch((restoreError: unknown) => {
+        if (active) setError(restoreError instanceof Error
+          ? restoreError.message : "No fue posible restaurar la sesión.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   const startMonitoring = (monitorUser: MonitorUser, journeyId: string) => {
     unsubscribeRef.current?.();
