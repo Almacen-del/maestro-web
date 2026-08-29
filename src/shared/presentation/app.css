@@ -125,7 +125,7 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
 }
 
 .button:disabled { opacity: .55; cursor: not-allowed; }
-.button--secondary { border: 1px solid #8db09b; background: transparent; }
+.button--secondary { border: 1px solid #8db09b; color: #174f32; background: transparent; }
 .button--danger { background: #9f2f24; border-color: #9f2f24; color: #fff; }
 
 .alert {
