@@ -1,0 +1,42 @@
+name: Validación Maestro Web
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Lint, pruebas y compilación
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+
+  repository-audit:
+    name: Secretos y artefactos prohibidos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - shell: bash
+        run: |
+          set -euo pipefail
+          forbidden_files="$(find . -type f \( -name '.env' -o -name '.env.local' -o -name '*.exe' -o -name '*.apk' -o -name '*.jks' -o -name '*.p12' -o -name '*.pfx' -o -name 'google-services.json' \) -print)"
+          forbidden_dirs="$(find . -type d \( -name node_modules -o -name dist -o -name .vercel \) -not -path './.git/*' -print)"
+          test -z "$forbidden_files"
+          test -z "$forbidden_dirs"
+          ! git grep -n -E -- 'AIza[0-9A-Za-z_-]{35}|-----BEGIN (PRIVATE KEY|CERTIFICATE)' ':!package-lock.json'
