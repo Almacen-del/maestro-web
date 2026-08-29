@@ -1,0 +1,24 @@
+.web-configuration-error {
+  margin: 0;
+  padding: 12px 20px;
+  background: #fff0e7;
+  color: #773018;
+  text-align: center;
+}
+
+.web-edition {
+  padding: 8px 20px;
+  background: #062f23;
+  color: #d7eddf;
+  text-align: center;
+  font-size: .75rem;
+  letter-spacing: .1em;
+}
+
+@media (max-width: 680px) {
+  .topbar, .topbar > div, .session { flex-wrap: wrap; }
+  .topbar { gap: 16px; }
+  .monitor { overflow-x: auto; }
+  .monitor-heading { flex-wrap: wrap; gap: 16px; }
+  .monitor-filters { flex-wrap: wrap; }
+}
