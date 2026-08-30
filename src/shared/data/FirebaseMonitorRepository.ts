@@ -51,6 +51,7 @@ import type {
   MonitorSnapshot,
   MonitorUnsubscribe,
   MonitorUser,
+  ProductionLotSummary,
   MigrationEntitySummary,
   MigrationImportMapEntry,
   MigrationImportResult,
@@ -591,6 +592,49 @@ function parseCatalogLine(value: unknown): ManageableCatalogLine {
   };
 }
 
+function parseProductionLot(value: unknown): ProductionLotSummary {
+  if (typeof value !== "object" || value === null) throw new Error("Un lote productivo no es válido.");
+  const lot = value as Record<string, unknown>;
+  const inventory = lot.inventario;
+  if (
+    typeof lot.loteId !== "string" || typeof lot.nombreVisible !== "string" ||
+    typeof lot.fechaSiembra !== "string" ||
+    (lot.especie !== null && typeof lot.especie !== "string") ||
+    (lot.variedad !== null && typeof lot.variedad !== "string") ||
+    (lot.estado !== "ACTIVO" && lot.estado !== "FINALIZADO") ||
+    !Number.isSafeInteger(lot.version) || !Array.isArray(lot.lineaIds) ||
+    lot.lineaIds.some((lineId) => typeof lineId !== "string") ||
+    typeof lot.creadoPorUsuarioId !== "string" || typeof lot.creadoEn !== "string" ||
+    typeof lot.actualizadoEn !== "string" || typeof inventory !== "object" || inventory === null
+  ) throw new Error("Un lote productivo no es válido.");
+  const totals = inventory as Record<string, unknown>;
+  const keys = ["hembras", "machos", "patrones", "total", "lineasConInventario", "lineasSinInventario"] as const;
+  if (keys.some((key) => !Number.isSafeInteger(totals[key]) || (totals[key] as number) < 0)) {
+    throw new Error("El inventario resumido del lote no es válido.");
+  }
+  return {
+    id: lot.loteId,
+    displayName: lot.nombreVisible,
+    sowingDate: lot.fechaSiembra,
+    ...(typeof lot.especie === "string" ? {species: lot.especie} : {}),
+    ...(typeof lot.variedad === "string" ? {variety: lot.variedad} : {}),
+    state: lot.estado,
+    version: lot.version as number,
+    lineIds: lot.lineaIds as string[],
+    inventory: {
+      females: totals.hembras as number,
+      males: totals.machos as number,
+      rootstocks: totals.patrones as number,
+      total: totals.total as number,
+      linesWithInventory: totals.lineasConInventario as number,
+      linesWithoutInventory: totals.lineasSinInventario as number,
+    },
+    createdByUserId: lot.creadoPorUsuarioId,
+    createdAt: lot.creadoEn,
+    updatedAt: lot.actualizadoEn,
+  };
+}
+
 function parseMigrationIssue(value: unknown): MigrationValidationIssue {
   if (typeof value !== "object" || value === null) throw new Error("El hallazgo de migración no es válido.");
   const issue = value as Record<string, unknown>;
@@ -1032,6 +1076,39 @@ export class FirebaseMonitorRepository implements MonitorRepository {
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible consultar el catalogo.", {cause: error});
     }
+  }
+
+  async listManageableLots(): Promise<readonly ProductionLotSummary[]> {
+    const callable = httpsCallable<Record<string, never>, {lotes: unknown[]}>(this.functions, "listarLotesAdministrables");
+    try {
+      const response = await callable({});
+      if (!Array.isArray(response.data.lotes)) throw new Error("La respuesta de lotes no es válida.");
+      return response.data.lotes.map(parseProductionLot);
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : "No fue posible consultar los lotes.", {cause: error});
+    }
+  }
+
+  async createProductionLot(
+    displayName: string, sowingDate: string, species: string | undefined,
+    variety: string | undefined, idempotencyKey: string,
+  ): Promise<ProductionLotSummary> {
+    const callable = httpsCallable(this.functions, "crearLoteProductivo");
+    const response = await callable({
+      nombreVisible: displayName, fechaSiembra: sowingDate,
+      especie: species ?? null, variedad: variety ?? null, claveIdempotencia: idempotencyKey,
+    });
+    return parseProductionLot(response.data);
+  }
+
+  async updateProductionLotLines(
+    lotId: string, expectedVersion: number, lineIds: readonly string[], idempotencyKey: string,
+  ): Promise<ProductionLotSummary> {
+    const callable = httpsCallable(this.functions, "actualizarLineasLote");
+    const response = await callable({
+      loteId: lotId, versionEsperada: expectedVersion, lineaIds: lineIds, claveIdempotencia: idempotencyKey,
+    });
+    return parseProductionLot(response.data);
   }
 
   async createCatalogLocation(
@@ -1951,6 +2028,18 @@ export class DisabledMonitorRepository implements MonitorRepository {
   }
 
   async listManageableCatalog(): Promise<ManageableCatalogData> {
+    throw new Error(this.configurationError);
+  }
+
+  async listManageableLots(): Promise<readonly ProductionLotSummary[]> {
+    throw new Error(this.configurationError);
+  }
+
+  async createProductionLot(): Promise<ProductionLotSummary> {
+    throw new Error(this.configurationError);
+  }
+
+  async updateProductionLotLines(): Promise<ProductionLotSummary> {
     throw new Error(this.configurationError);
   }
 

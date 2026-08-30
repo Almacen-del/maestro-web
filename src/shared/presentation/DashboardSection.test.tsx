@@ -17,6 +17,7 @@ function repository(): MonitorRepository {
         {id: "linea-2", locationId: "cama-1", code: "L2", displayName: "Línea 2", order: 2, active: true, version: 1, occupiedByActiveJourney: false, draftSelectionCount: 0},
       ],
     }),
+    listManageableLots: vi.fn().mockResolvedValue([]),
   });
 }
 
@@ -28,6 +29,6 @@ describe("DashboardSection", () => {
     expect(screen.getAllByText("20")).toHaveLength(2);
     expect(screen.getAllByText("10")).toHaveLength(2);
     expect(screen.getByText("1 de 2 líneas con inventario")).toBeInTheDocument();
-    expect(screen.getByText("Configuración pendiente")).toBeInTheDocument();
+    expect(screen.getByText("Sin lotes registrados")).toBeInTheDocument();
   });
 });

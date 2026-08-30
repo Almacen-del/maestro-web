@@ -13,6 +13,8 @@ import {CatalogSection} from "./CatalogSection";
 import {DashboardSection} from "./DashboardSection";
 import {DraftJourneysSection} from "./DraftJourneysSection";
 import {InventoryReportsSection} from "./InventoryReportsSection";
+import {InventorySection} from "./InventorySection";
+import {LotsSection} from "./LotsSection";
 import type {ReportPlatform} from "./InventoryReportsSection";
 import {DiscardsSection} from "./DiscardsSection";
 import {MigrationValidationSection} from "./MigrationValidationSection";
@@ -75,7 +77,7 @@ export function App({repository, reportPlatform}: AppProps) {
   const [password, setPassword] = useState("");
   const [user, setUser] = useState<MonitorUser>();
   const [activeSection, setActiveSection] = useState<
-    "DASHBOARD" | "MONITOR" | "MAP" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
+    "DASHBOARD" | "MONITOR" | "MAP" | "INVENTORY" | "LOTS" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
   >("DASHBOARD");
   const [journeys, setJourneys] = useState<readonly MonitorJourney[]>([]);
   const [selectedJourneyId, setSelectedJourneyId] = useState<string>();
@@ -505,6 +507,8 @@ export function App({repository, reportPlatform}: AppProps) {
           >
             Mapa
           </button>
+          {user.canManageCatalog && <button className={activeSection === "INVENTORY" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("INVENTORY")}>Inventario</button>}
+          {user.canManageCatalog && <button className={activeSection === "LOTS" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("LOTS")}>Lotes</button>}
           {user.canReview && (
             <button
               className={activeSection === "DISCARDS" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
@@ -610,6 +614,10 @@ export function App({repository, reportPlatform}: AppProps) {
         <InventoryReportsSection repository={repository} currentUser={user} platform={reportPlatform} />
       ) : activeSection === "DASHBOARD" && user.canManageCatalog ? (
         <DashboardSection repository={repository} />
+      ) : activeSection === "INVENTORY" && user.canManageCatalog ? (
+        <InventorySection repository={repository} />
+      ) : activeSection === "LOTS" && user.canManageCatalog ? (
+        <LotsSection repository={repository} />
       ) : activeSection === "MAP" ? (
         <ModuleMapSection
           snapshot={snapshot}

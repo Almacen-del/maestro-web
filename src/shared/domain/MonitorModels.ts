@@ -389,6 +389,30 @@ export interface ManageableCatalogData {
   readonly lines: readonly ManageableCatalogLine[];
 }
 
+export interface ProductionLotInventorySummary {
+  readonly females: number;
+  readonly males: number;
+  readonly rootstocks: number;
+  readonly total: number;
+  readonly linesWithInventory: number;
+  readonly linesWithoutInventory: number;
+}
+
+export interface ProductionLotSummary {
+  readonly id: string;
+  readonly displayName: string;
+  readonly sowingDate: string;
+  readonly species?: string;
+  readonly variety?: string;
+  readonly state: "ACTIVO" | "FINALIZADO";
+  readonly version: number;
+  readonly lineIds: readonly string[];
+  readonly inventory: ProductionLotInventorySummary;
+  readonly createdByUserId: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export type MigrationValidationEntity = "PAQUETE" | "UBICACION" | "LINEA" | "INVENTARIO_INICIAL";
 
 export interface MigrationValidationIssue {
@@ -538,6 +562,20 @@ export interface MonitorRepository {
     idempotencyKey: string,
   ): Promise<ManageableUser>;
   listManageableCatalog(): Promise<ManageableCatalogData>;
+  listManageableLots(): Promise<readonly ProductionLotSummary[]>;
+  createProductionLot(
+    displayName: string,
+    sowingDate: string,
+    species: string | undefined,
+    variety: string | undefined,
+    idempotencyKey: string,
+  ): Promise<ProductionLotSummary>;
+  updateProductionLotLines(
+    lotId: string,
+    expectedVersion: number,
+    lineIds: readonly string[],
+    idempotencyKey: string,
+  ): Promise<ProductionLotSummary>;
   createCatalogLocation(
     code: string,
     type: string,

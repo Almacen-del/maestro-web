@@ -4,6 +4,7 @@ import type {
   ManageableCatalogLine,
   ManageableCatalogLocation,
   MonitorRepository,
+  ProductionLotSummary,
 } from "../domain/MonitorModels";
 
 interface DashboardSectionProps {
@@ -38,6 +39,7 @@ function moduleForLine(
 
 export function DashboardSection({repository}: DashboardSectionProps) {
   const [catalog, setCatalog] = useState<ManageableCatalogData>();
+  const [lots, setLots] = useState<readonly ProductionLotSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
 
@@ -45,7 +47,11 @@ export function DashboardSection({repository}: DashboardSectionProps) {
     setLoading(true);
     setError(undefined);
     try {
-      setCatalog(await repository.listManageableCatalog());
+      const [nextCatalog, nextLots] = await Promise.all([
+        repository.listManageableCatalog(), repository.listManageableLots(),
+      ]);
+      setCatalog(nextCatalog);
+      setLots(nextLots);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No fue posible cargar el resumen administrativo.");
     } finally {
@@ -135,10 +141,10 @@ export function DashboardSection({repository}: DashboardSectionProps) {
             </section>
 
             <aside className="dashboard-panel dashboard-lots" aria-labelledby="lots-title">
-              <p className="eyebrow">NUEVA ESTRUCTURA</p>
+              <p className="eyebrow">COHORTES DE SIEMBRA</p>
               <h2 id="lots-title">Lotes productivos</h2>
-              <p>Un lote será una camada de plantas sembradas en el mismo periodo. Podrá ocupar varias líneas o módulos, pero cada línea tendrá un solo lote activo.</p>
-              <div className="dashboard-lots__pending"><strong>Configuración pendiente</strong><span>Los totales por lote aparecerán cuando se registre la fecha de siembra y se asignen las líneas.</span></div>
+              <p>Cada lote reúne plantas sembradas en el mismo periodo y puede ocupar líneas de distintos módulos.</p>
+              {lots.length === 0 ? <div className="dashboard-lots__pending"><strong>Sin lotes registrados</strong><span>Cree el primer lote y asígnele líneas desde la sección Lotes.</span></div> : <div className="dashboard-lot-list">{lots.slice(0, 6).map((lot) => <article key={lot.id}><div><strong>{lot.displayName}</strong><span>{lot.sowingDate} · {lot.lineIds.length} líneas</span></div><b>{lot.inventory.total.toLocaleString("es-CO")}</b></article>)}</div>}
             </aside>
           </div>
         </>
