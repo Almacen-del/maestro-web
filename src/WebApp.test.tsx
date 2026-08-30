@@ -21,6 +21,7 @@ function repository(user = admin): MonitorRepository {
     listManageableUsers: vi.fn().mockResolvedValue([]),
     listManageableCatalog: vi.fn().mockResolvedValue({locations: [], lines: []}),
     listManageableLots: vi.fn().mockResolvedValue([]),
+    listManageableCountStatistics: vi.fn().mockResolvedValue({currentCount: 0, historicalCount: 0, females: 0, males: 0, rootstocks: 0, total: 0, byState: [], byAuthor: [], byLot: []}),
   });
 }
 
@@ -39,12 +40,14 @@ describe("Vivero Maestro Web", () => {
     fireEvent.change(screen.getByLabelText("Correo"), {target: {value: "admin@prueba.local"}});
     fireEvent.change(screen.getByLabelText("Contraseña"), {target: {value: "Ficticia123"}});
     fireEvent.click(screen.getByRole("button", {name: "Iniciar sesión"}));
-    expect(await screen.findByRole("button", {name: "Catálogo"})).toBeEnabled();
+    expect(await screen.findByRole("button", {name: "Administración"})).toBeEnabled();
     expect(screen.getByRole("button", {name: "Inicio"})).toBeEnabled();
     expect(screen.getByRole("button", {name: "Inventario"})).toBeEnabled();
-    expect(screen.getByRole("button", {name: "Lotes"})).toBeEnabled();
+    expect(screen.getByRole("button", {name: "Conteos"})).toBeEnabled();
     expect(screen.queryByRole("button", {name: "Jornadas"})).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", {name: "Usuarios"}));
+    expect(screen.getByRole("button", {name: "Labores"})).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", {name: "Administración"}));
+    fireEvent.click(await screen.findByRole("button", {name: /Usuarios/}));
     expect(await screen.findByRole("button", {name: "Crear usuario"})).toBeEnabled();
   });
   it("no expone administración a auxiliares", async () => {
@@ -56,7 +59,7 @@ describe("Vivero Maestro Web", () => {
     fireEvent.click(screen.getByRole("button", {name: "Iniciar sesión"}));
     await screen.findByRole("button", {name: "Cerrar sesión"});
     expect(screen.queryByRole("button", {name: "Usuarios"})).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", {name: "Catálogo"})).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", {name: "Administración"})).not.toBeInTheDocument();
   });
   it("oculta OAuth desktop pero conserva estado y revocación confirmada", async () => {
     const repo = repository();

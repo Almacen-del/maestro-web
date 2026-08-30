@@ -10,10 +10,13 @@ import type {
 } from "../domain/MonitorModels";
 import {sortMonitorLines} from "../domain/MonitorModels";
 import {CatalogSection} from "./CatalogSection";
+import {AdministrationSection, type AdministrationDestination} from "./AdministrationSection";
 import {DashboardSection} from "./DashboardSection";
+import {CountStatisticsSection} from "./CountStatisticsSection";
 import {DraftJourneysSection} from "./DraftJourneysSection";
 import {InventoryReportsSection} from "./InventoryReportsSection";
 import {InventorySection} from "./InventorySection";
+import {LaborsSection} from "./LaborsSection";
 import {LotsSection} from "./LotsSection";
 import type {ReportPlatform} from "./InventoryReportsSection";
 import {DiscardsSection} from "./DiscardsSection";
@@ -77,7 +80,7 @@ export function App({repository, reportPlatform}: AppProps) {
   const [password, setPassword] = useState("");
   const [user, setUser] = useState<MonitorUser>();
   const [activeSection, setActiveSection] = useState<
-    "DASHBOARD" | "MONITOR" | "MAP" | "INVENTORY" | "LOTS" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
+    "DASHBOARD" | "MONITOR" | "STATISTICS" | "MAP" | "INVENTORY" | "LABORS" | "ADMIN" | "LOTS" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
   >("DASHBOARD");
   const [journeys, setJourneys] = useState<readonly MonitorJourney[]>([]);
   const [selectedJourneyId, setSelectedJourneyId] = useState<string>();
@@ -488,14 +491,7 @@ export function App({repository, reportPlatform}: AppProps) {
               Inicio
             </button>
           )}
-          <button
-            className={activeSection === "MONITOR" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-            type="button"
-            onClick={() => setActiveSection("MONITOR")}
-          >
-            Conteos
-          </button>
-          <button
+          {user.canManageCatalog && <button
             className={activeSection === "MAP" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
             type="button"
             onClick={() => {
@@ -506,79 +502,13 @@ export function App({repository, reportPlatform}: AppProps) {
             }}
           >
             Mapa
-          </button>
+          </button>}
           {user.canManageCatalog && <button className={activeSection === "INVENTORY" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("INVENTORY")}>Inventario</button>}
-          {user.canManageCatalog && <button className={activeSection === "LOTS" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("LOTS")}>Lotes</button>}
-          {user.canReview && (
-            <button
-              className={activeSection === "DISCARDS" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-              type="button"
-              onClick={() => {
-                setReviewDialog(undefined);
-                setReassignmentDialog(undefined);
-                setReleaseDialog(undefined);
-                setActiveSection("DISCARDS");
-              }}
-            >
-              Descartes
-            </button>
-          )}
-          {user.canReview && (
-            <button
-              className={activeSection === "REPORTS" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-              type="button"
-              onClick={() => {
-                setReviewDialog(undefined);
-                setReassignmentDialog(undefined);
-                setReleaseDialog(undefined);
-                setActiveSection("REPORTS");
-              }}
-            >
-              Informes
-            </button>
-          )}
-          {user.canManageUsers && (
-            <button
-              className={activeSection === "USERS" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-              type="button"
-              onClick={() => {
-                setReviewDialog(undefined);
-                setReassignmentDialog(undefined);
-                setReleaseDialog(undefined);
-                setActiveSection("USERS");
-              }}
-            >
-              Usuarios
-            </button>
-          )}
-          {user.canManageCatalog && (
-            <button
-              className={activeSection === "CATALOG" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-              type="button"
-              onClick={() => {
-                setReviewDialog(undefined);
-                setReassignmentDialog(undefined);
-                setReleaseDialog(undefined);
-                setActiveSection("CATALOG");
-              }}
-            >
-              Catálogo
-            </button>
-          )}
-          {user.role === "ADMINISTRADOR" && (
-            <button
-              className={activeSection === "MIGRATION" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-              type="button"
-              onClick={() => {
-                setReviewDialog(undefined);
-                setReassignmentDialog(undefined);
-                setReleaseDialog(undefined);
-                setActiveSection("MIGRATION");
-              }}
-            >
-              Migración — Validación
-            </button>
-          )}
+          {user.canManageCatalog && <button className={activeSection === "STATISTICS" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("STATISTICS")}>Conteos</button>}
+          {user.canManageCatalog && <button className={activeSection === "LABORS" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("LABORS")}>Labores</button>}
+          {user.role === "ADMINISTRADOR" && <button className={activeSection === "ADMIN" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("ADMIN")}>Administración</button>}
+          {!user.canManageCatalog && user.canReview && <button className={activeSection === "MONITOR" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("MONITOR")}>Revisión</button>}
+          {!user.canManageCatalog && user.canReview && <button className={activeSection === "DISCARDS" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("DISCARDS")}>Descartes</button>}
         </nav>
       )}
 
@@ -614,8 +544,14 @@ export function App({repository, reportPlatform}: AppProps) {
         <InventoryReportsSection repository={repository} currentUser={user} platform={reportPlatform} />
       ) : activeSection === "DASHBOARD" && user.canManageCatalog ? (
         <DashboardSection repository={repository} />
+      ) : activeSection === "STATISTICS" && user.canManageCatalog ? (
+        <CountStatisticsSection repository={repository} />
       ) : activeSection === "INVENTORY" && user.canManageCatalog ? (
         <InventorySection repository={repository} />
+      ) : activeSection === "LABORS" && user.canManageCatalog ? (
+        <LaborsSection />
+      ) : activeSection === "ADMIN" && user.role === "ADMINISTRADOR" ? (
+        <AdministrationSection onOpen={(destination: AdministrationDestination) => setActiveSection(destination)} />
       ) : activeSection === "LOTS" && user.canManageCatalog ? (
         <LotsSection repository={repository} />
       ) : activeSection === "MAP" ? (

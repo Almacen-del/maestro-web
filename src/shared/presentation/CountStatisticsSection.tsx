@@ -1,0 +1,13 @@
+import {useEffect, useState} from "react";
+import type {CountStatisticsGroup, ManageableCountStatistics, MonitorRepository} from "../domain/MonitorModels";
+
+function GroupList({title, groups}: {readonly title: string; readonly groups: readonly CountStatisticsGroup[]}) {
+  return <section className="statistics-panel"><h2>{title}</h2>{groups.length === 0 ? <p className="empty-state">Sin datos.</p> : <div className="statistics-groups">{groups.map((group) => <article key={group.key}><div><strong>{group.displayName}</strong><span>{group.count} conteos vigentes</span></div><b>{group.total.toLocaleString("es-CO")}</b></article>)}</div>}</section>;
+}
+
+export function CountStatisticsSection({repository}: {readonly repository: MonitorRepository}) {
+  const [data, setData] = useState<ManageableCountStatistics>(); const [error, setError] = useState<string>(); const [loading, setLoading] = useState(true);
+  const load = async () => { setLoading(true); setError(undefined); try { setData(await repository.listManageableCountStatistics()); } catch (reason) { setError(reason instanceof Error ? reason.message : "No fue posible cargar las estadísticas."); } finally { setLoading(false); } };
+  useEffect(() => { void load(); }, []);
+  return <section className="count-statistics" aria-labelledby="statistics-title"><div className="admin-dashboard__heading"><div><p className="eyebrow">ANÁLISIS DE CAMPO</p><h1 id="statistics-title">Estadísticas de conteos</h1><p>Resumen de las versiones vigentes recibidas desde Vivero Campo.</p></div><button className="button button--secondary" disabled={loading} onClick={() => void load()}>{loading ? "Actualizando…" : "Actualizar"}</button></div>{error && <p className="alert">{error}</p>}{data && <><div className="dashboard-kpis statistics-kpis"><article className="dashboard-kpi dashboard-kpi--primary"><span>Total contado</span><strong>{data.total.toLocaleString("es-CO")}</strong></article><article className="dashboard-kpi"><span>Conteos vigentes</span><strong>{data.currentCount}</strong></article><article className="dashboard-kpi"><span>Versiones históricas</span><strong>{data.historicalCount}</strong></article><article className="dashboard-kpi"><span>Hembras</span><strong>{data.females.toLocaleString("es-CO")}</strong></article><article className="dashboard-kpi"><span>Machos</span><strong>{data.males.toLocaleString("es-CO")}</strong></article><article className="dashboard-kpi"><span>Patrones</span><strong>{data.rootstocks.toLocaleString("es-CO")}</strong></article></div><div className="statistics-layout"><GroupList title="Por lote" groups={data.byLot} /><GroupList title="Por estado" groups={data.byState} /><GroupList title="Por responsable" groups={data.byAuthor} /></div></>}</section>;
+}

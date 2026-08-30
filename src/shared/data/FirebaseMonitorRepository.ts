@@ -35,6 +35,7 @@ import type {
   ManageableCatalogLine,
   ManageableCatalogInventory,
   ManageableCatalogLocation,
+  ManageableCountStatistics,
   ManageableJourneysData,
   ManageableUser,
   MonitorCount,
@@ -635,6 +636,24 @@ function parseProductionLot(value: unknown): ProductionLotSummary {
   };
 }
 
+function parseCountStatistics(value: unknown): ManageableCountStatistics {
+  if (typeof value !== "object" || value === null) throw new Error("Las estadísticas no son válidas.");
+  const record = value as Record<string, unknown>;
+  const parseGroups = (candidate: unknown) => {
+    if (!Array.isArray(candidate)) throw new Error("Las estadísticas agrupadas no son válidas.");
+    return candidate.map((item) => {
+      if (typeof item !== "object" || item === null) throw new Error("Un grupo estadístico no es válido.");
+      const group = item as Record<string, unknown>;
+      const numbers = [group.cantidadConteos, group.hembras, group.machos, group.patrones, group.total];
+      if (typeof group.clave !== "string" || typeof group.nombreVisible !== "string" || numbers.some((number) => !Number.isSafeInteger(number) || (number as number) < 0)) throw new Error("Un grupo estadístico no es válido.");
+      return {key: group.clave, displayName: group.nombreVisible, count: group.cantidadConteos as number, females: group.hembras as number, males: group.machos as number, rootstocks: group.patrones as number, total: group.total as number};
+    });
+  };
+  const numberKeys = ["cantidadConteosVigentes", "cantidadConteosHistoricos", "hembras", "machos", "patrones", "total"] as const;
+  if (numberKeys.some((key) => !Number.isSafeInteger(record[key]) || (record[key] as number) < 0)) throw new Error("Las estadísticas no son válidas.");
+  return {currentCount: record.cantidadConteosVigentes as number, historicalCount: record.cantidadConteosHistoricos as number, females: record.hembras as number, males: record.machos as number, rootstocks: record.patrones as number, total: record.total as number, byState: parseGroups(record.porEstado), byAuthor: parseGroups(record.porAutor), byLot: parseGroups(record.porLote)};
+}
+
 function parseMigrationIssue(value: unknown): MigrationValidationIssue {
   if (typeof value !== "object" || value === null) throw new Error("El hallazgo de migración no es válido.");
   const issue = value as Record<string, unknown>;
@@ -1087,6 +1106,12 @@ export class FirebaseMonitorRepository implements MonitorRepository {
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible consultar los lotes.", {cause: error});
     }
+  }
+
+  async listManageableCountStatistics(): Promise<ManageableCountStatistics> {
+    const callable = httpsCallable<Record<string, never>, unknown>(this.functions, "listarEstadisticasConteos");
+    try { return parseCountStatistics((await callable({})).data); }
+    catch (error) { throw new Error(error instanceof Error ? error.message : "No fue posible consultar las estadísticas.", {cause: error}); }
   }
 
   async createProductionLot(
@@ -2032,6 +2057,10 @@ export class DisabledMonitorRepository implements MonitorRepository {
   }
 
   async listManageableLots(): Promise<readonly ProductionLotSummary[]> {
+    throw new Error(this.configurationError);
+  }
+
+  async listManageableCountStatistics(): Promise<ManageableCountStatistics> {
     throw new Error(this.configurationError);
   }
 

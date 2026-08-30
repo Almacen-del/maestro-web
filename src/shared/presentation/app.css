@@ -447,6 +447,27 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
 .inventory-table th:first-child, .inventory-table th:nth-child(2), .inventory-table td:first-child, .inventory-table td:nth-child(2) { text-align: left; }
 .inventory-table td:first-child { display: grid; gap: 2px; }
 .inventory-table td small { color: #66766d; }
+.count-statistics { width: min(100% - 48px, 1180px); margin: 0 auto; padding: 52px 0 72px; }
+.statistics-layout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.statistics-panel { padding: 18px; border: 1px solid #cfe0d2; border-radius: 16px; background: #fff; }
+.statistics-panel h2 { margin: 0 0 14px; color: #164c32; }
+.statistics-groups { display: grid; gap: 8px; }
+.statistics-groups article { display: flex; justify-content: space-between; gap: 12px; padding: 11px; border-radius: 10px; background: #f2f7f3; }
+.statistics-groups article div { display: grid; gap: 3px; }
+.statistics-groups span { color: #66766d; font-size: .75rem; }
+.statistics-groups b { color: #176638; }
+.administration-hub, .labors-section { width: min(100% - 48px, 1180px); margin: 0 auto; padding: 52px 0 72px; }
+.administration-grid, .labor-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.administration-grid button { display: grid; min-height: 150px; gap: 9px; padding: 18px; border: 1px solid #cfe0d2; border-radius: 16px; background: #fff; color: #234c38; text-align: left; cursor: pointer; }
+.administration-grid button:hover { border-color: #45875e; background: #f2f8f3; }
+.administration-grid strong { font-size: 1.15rem; }
+.administration-grid span { color: #66766d; line-height: 1.45; }
+.administration-grid b { align-self: end; color: #176638; }
+.labor-warning { display: grid; gap: 6px; margin-bottom: 18px; padding: 16px; border-left: 5px solid #d09a2e; border-radius: 10px; background: #fff7e3; }
+.labor-cards article { padding: 18px; border: 1px dashed #aebfb2; border-radius: 15px; background: #f7f8f5; }
+.labor-cards span { color: #8b671f; font-size: .7rem; font-weight: 900; letter-spacing: .08em; }
+.labor-cards h2 { color: #365744; }
+.labor-cards p { color: #66766d; }
 
 .module-map {
   width: min(100% - 48px, 1180px);
@@ -596,7 +617,10 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
   .catalog-tree-children { margin-left: 8px; }
   .admin-dashboard { width: min(100% - 28px, 1120px); padding-top: 36px; }
   .lots-admin, .inventory-admin { width: min(100% - 28px, 1120px); padding-top: 36px; }
+  .count-statistics { width: min(100% - 28px, 1120px); padding-top: 36px; }
+  .administration-hub, .labors-section { width: min(100% - 28px, 1120px); padding-top: 36px; }
   .lot-create, .lots-layout, .inventory-filters { grid-template-columns: 1fr; }
+  .statistics-layout { grid-template-columns: 1fr; }
   .admin-dashboard__heading { align-items: stretch; flex-direction: column; }
   .dashboard-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-layout, .module-summary-row { grid-template-columns: 1fr; }

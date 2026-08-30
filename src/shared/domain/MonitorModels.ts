@@ -413,6 +413,28 @@ export interface ProductionLotSummary {
   readonly updatedAt: string;
 }
 
+export interface CountStatisticsGroup {
+  readonly key: string;
+  readonly displayName: string;
+  readonly count: number;
+  readonly females: number;
+  readonly males: number;
+  readonly rootstocks: number;
+  readonly total: number;
+}
+
+export interface ManageableCountStatistics {
+  readonly currentCount: number;
+  readonly historicalCount: number;
+  readonly females: number;
+  readonly males: number;
+  readonly rootstocks: number;
+  readonly total: number;
+  readonly byState: readonly CountStatisticsGroup[];
+  readonly byAuthor: readonly CountStatisticsGroup[];
+  readonly byLot: readonly CountStatisticsGroup[];
+}
+
 export type MigrationValidationEntity = "PAQUETE" | "UBICACION" | "LINEA" | "INVENTARIO_INICIAL";
 
 export interface MigrationValidationIssue {
@@ -563,6 +585,7 @@ export interface MonitorRepository {
   ): Promise<ManageableUser>;
   listManageableCatalog(): Promise<ManageableCatalogData>;
   listManageableLots(): Promise<readonly ProductionLotSummary[]>;
+  listManageableCountStatistics(): Promise<ManageableCountStatistics>;
   createProductionLot(
     displayName: string,
     sowingDate: string,
