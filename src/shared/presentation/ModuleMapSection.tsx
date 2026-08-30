@@ -1,189 +1,33 @@
 import {useEffect, useMemo, useState} from "react";
-import type {MonitorJourney, MonitorLine, MonitorSnapshot} from "../domain/MonitorModels";
+import type {ManageableCatalogData, ManageableCatalogLine, ManageableCatalogLocation, MonitorLine, MonitorRepository, MonitorSnapshot, ProductionLotSummary} from "../domain/MonitorModels";
 
-interface ModuleMapSectionProps {
-  readonly snapshot?: MonitorSnapshot;
-  readonly loading: boolean;
-  readonly journeys?: readonly MonitorJourney[];
-  readonly selectedJourneyId?: string;
-  readonly onSelectJourney?: (journeyId: string) => void;
-}
-
+interface Props { readonly repository: MonitorRepository; readonly snapshot?: MonitorSnapshot; readonly loading: boolean; }
 type VisualState = "completed" | "working" | "pending";
+interface MapLine { readonly catalog: ManageableCatalogLine; readonly nursery: string; readonly module: string; readonly bed: string; readonly operational?: MonitorLine; readonly lot?: ProductionLotSummary; }
 
-function numericOrder(value: string): number {
-  const match = value.match(/\d+(?:[.,]\d+)?/);
-  return match ? Number(match[0].replace(",", ".")) : Number.NEGATIVE_INFINITY;
-}
+function numericOrder(value: string): number { const match = value.match(/\d+(?:[.,]\d+)?/); return match ? Number(match[0].replace(",", ".")) : -1; }
+function lineage(line: ManageableCatalogLine, locations: ReadonlyMap<string, ManageableCatalogLocation>) { const result: ManageableCatalogLocation[] = []; const visited = new Set<string>(); let current = locations.get(line.locationId); while (current && !visited.has(current.id)) { visited.add(current.id); result.push(current); current = current.parentId ? locations.get(current.parentId) : undefined; } return result; }
+function ancestor(items: readonly ManageableCatalogLocation[], type: string, fallback: string) { return items.find((item) => item.type.toUpperCase().includes(type))?.displayName ?? fallback; }
+function visualState(line: MapLine): VisualState { if (["EN_CONTEO", "PENDIENTE_REVISION"].includes(line.operational?.state ?? "")) return "working"; if (line.operational?.state === "APROBADA" || line.catalog.inventory) return "completed"; return "pending"; }
+function visualLabel(line: MapLine) { return visualState(line) === "completed" ? "Realizada" : visualState(line) === "working" ? "En proceso" : "Pendiente"; }
 
-function visualState(line: MonitorLine): VisualState {
-  if (line.state === "APROBADA") return "completed";
-  if (line.state === "EN_CONTEO" || line.state === "PENDIENTE_REVISION") return "working";
-  return "pending";
-}
+export function ModuleMapSection({repository, snapshot, loading}: Props) {
+  const [catalog, setCatalog] = useState<ManageableCatalogData>({locations: [], lines: []});
+  const [lots, setLots] = useState<readonly ProductionLotSummary[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [error, setError] = useState<string>();
+  useEffect(() => { void Promise.all([repository.listManageableCatalog(), repository.listManageableLots()]).then(([nextCatalog, nextLots]) => { setCatalog(nextCatalog); setLots(nextLots); }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "No fue posible cargar el mapa.")).finally(() => setCatalogLoading(false)); }, []);
+  const mapLines = useMemo(() => { const locations = new Map(catalog.locations.map((item) => [item.id, item])); const operational = new Map((snapshot?.lines ?? []).map((item) => [item.lineId, item])); const lotByLine = new Map(lots.flatMap((lot) => lot.lineIds.map((lineId) => [lineId, lot] as const))); return catalog.lines.filter((line) => line.active).map((line): MapLine => { const path = lineage(line, locations); const nearest = path[0]?.displayName ?? "Ubicación sin identificar"; return {catalog: line, nursery: ancestor(path, "VIVERO", path.at(-1)?.displayName ?? nearest), module: ancestor(path, "MOD", nearest), bed: ancestor(path, "CAMA", nearest), operational: operational.get(line.id), lot: lotByLine.get(line.id)}; }); }, [catalog, lots, snapshot]);
+  const modules = useMemo(() => { const grouped = new Map<string, MapLine[]>(); for (const line of mapLines) grouped.set(line.module, [...(grouped.get(line.module) ?? []), line]); return [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b, "es", {numeric: true})); }, [mapLines]);
+  const [selectedModule, setSelectedModule] = useState<string>(); const [selectedLineId, setSelectedLineId] = useState<string>();
+  useEffect(() => { if (!modules.length) { setSelectedModule(undefined); setSelectedLineId(undefined); } else if (!selectedModule || !modules.some(([name]) => name === selectedModule)) { setSelectedModule(modules[0]?.[0]); setSelectedLineId(undefined); } }, [modules, selectedModule]);
+  const lines = modules.find(([name]) => name === selectedModule)?.[1] ?? []; const selectedLine = lines.find((line) => line.catalog.id === selectedLineId);
+  const beds = useMemo(() => { const grouped = new Map<string, MapLine[]>(); for (const line of lines) grouped.set(line.bed, [...(grouped.get(line.bed) ?? []), line]); return [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b, "es", {numeric: true})).map(([name, values]) => [name, [...values].sort((a, b) => numericOrder(b.catalog.code) - numericOrder(a.catalog.code) || b.catalog.order - a.catalog.order)] as const); }, [lines]);
+  const completed = lines.filter((line) => visualState(line) === "completed").length; const working = lines.filter((line) => visualState(line) === "working").length; const pending = lines.length - completed - working; const busy = loading || catalogLoading;
 
-function visualLabel(line: MonitorLine): string {
-  const state = visualState(line);
-  return state === "completed" ? "Realizada" : state === "working" ? "En proceso" : "Pendiente";
-}
-
-function moduleName(line: MonitorLine): string {
-  return line.location.module.trim() || "Módulo sin nombre";
-}
-
-export function ModuleMapSection({snapshot, loading, journeys = [], selectedJourneyId, onSelectJourney}: ModuleMapSectionProps) {
-  const modules = useMemo(() => {
-    const grouped = new Map<string, MonitorLine[]>();
-    for (const line of snapshot?.lines ?? []) {
-      const name = moduleName(line);
-      grouped.set(name, [...(grouped.get(name) ?? []), line]);
-    }
-    return [...grouped.entries()].sort(([left], [right]) =>
-      left.localeCompare(right, "es", {numeric: true}),
-    );
-  }, [snapshot]);
-  const [selectedModule, setSelectedModule] = useState<string>();
-  const [selectedLine, setSelectedLine] = useState<MonitorLine>();
-
-  useEffect(() => {
-    if (!modules.length) {
-      setSelectedModule(undefined);
-      setSelectedLine(undefined);
-      return;
-    }
-    if (!selectedModule || !modules.some(([name]) => name === selectedModule)) {
-      setSelectedModule(modules[0]?.[0]);
-      setSelectedLine(undefined);
-    }
-  }, [modules, selectedModule]);
-
-  const lines = modules.find(([name]) => name === selectedModule)?.[1] ?? [];
-  const beds = useMemo(() => {
-    const grouped = new Map<string, MonitorLine[]>();
-    for (const line of lines) {
-      const bed = line.location.bed.trim() || "Cama sin nombre";
-      grouped.set(bed, [...(grouped.get(bed) ?? []), line]);
-    }
-    return [...grouped.entries()]
-      .sort(([left], [right]) => left.localeCompare(right, "es", {numeric: true}))
-      .map(([name, bedLines]) => [name, [...bedLines].sort((left, right) =>
-        numericOrder(right.location.line) - numericOrder(left.location.line) ||
-        right.location.order - left.location.order,
-      )] as const);
-  }, [lines]);
-
-  const completed = lines.filter((line) => visualState(line) === "completed").length;
-  const working = lines.filter((line) => visualState(line) === "working").length;
-  const pending = lines.length - completed - working;
-
-  return (
-    <section className="module-map" aria-labelledby="module-map-title">
-      <div className="module-map__heading">
-        <div>
-          <p className="eyebrow">Plano operativo</p>
-          <h1 id="module-map-title">Mapa de módulos</h1>
-          <p>{snapshot ? `${snapshot.journeyDisplayName} · actualización en tiempo real` : "Seleccione una jornada activa en Conteos."}</p>
-        </div>
-        <div className="module-map__selectors">
-          {journeys.length > 0 && onSelectJourney && (
-            <label>
-              Jornada activa
-              <select value={selectedJourneyId ?? ""} onChange={(event) => event.target.value && onSelectJourney(event.target.value)}>
-                <option value="">Seleccionar jornada</option>
-                {journeys.map((journey) => <option key={journey.id} value={journey.id}>{journey.displayName}</option>)}
-              </select>
-            </label>
-          )}
-          {modules.length > 0 && (
-            <label>
-              Módulo
-              <select value={selectedModule ?? ""} onChange={(event) => {
-                setSelectedModule(event.target.value);
-                setSelectedLine(undefined);
-              }}>
-                {modules.map(([name, moduleLines]) => <option key={name} value={name}>{name} · {moduleLines.length} líneas</option>)}
-              </select>
-            </label>
-          )}
-        </div>
-      </div>
-
-      {loading && <p className="empty-state">Cargando plano…</p>}
-      {!loading && !snapshot && <p className="empty-state">Seleccione una jornada activa para ver su mapa.</p>}
-      {!loading && snapshot && modules.length === 0 && <p className="empty-state">La jornada no contiene líneas para representar.</p>}
-
-      {lines.length > 0 && (
-        <>
-          <div className="module-map__summary" aria-label="Resumen del módulo">
-            <span><i className="map-dot map-dot--completed" />{completed} realizadas</span>
-            <span><i className="map-dot map-dot--working" />{working} en proceso</span>
-            <span><i className="map-dot map-dot--pending" />{pending} pendientes o devueltas</span>
-          </div>
-          <div className="module-map__layout">
-            <div className="module-plan" aria-label={`Plano de ${selectedModule ?? "módulo"}`}>
-              <div className="module-plan__north" aria-hidden="true">N ↑</div>
-              <div className="module-plan__gate">ACCESO</div>
-              <div className="module-plan__beds" style={{gridTemplateColumns: `repeat(${Math.max(beds.length, 1)}, minmax(170px, 1fr))`}}>
-                {beds.map(([bed, bedLines], index) => (
-                  <div className="module-bed" key={bed}>
-                    <h2>{bed}</h2>
-                    <div className="module-bed__lines">
-                      {bedLines.map((line) => {
-                        const state = visualState(line);
-                        return (
-                          <button
-                            key={line.id}
-                            type="button"
-                            className={`module-line module-line--${state}${selectedLine?.id === line.id ? " module-line--selected" : ""}`}
-                            aria-label={`${line.location.displayName}: ${visualLabel(line)}`}
-                            title={`${line.location.displayName} · ${visualLabel(line)}`}
-                            onClick={() => setSelectedLine(line)}
-                          >
-                            <span>{line.location.line}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {index < beds.length - 1 && <span className="module-plan__corridor" aria-hidden="true">CORREDOR</span>}
-                  </div>
-                ))}
-              </div>
-              <div className="module-plan__gate">ACCESO</div>
-            </div>
-
-            <aside className="module-line-detail" aria-live="polite">
-              {!selectedLine ? (
-                <div className="module-line-detail__empty">
-                  <strong>Seleccione una línea</strong>
-                  <span>Pulse una barra del plano para consultar sus datos.</span>
-                </div>
-              ) : (
-                <>
-                  <div className="module-line-detail__heading">
-                    <div>
-                      <small>{selectedLine.location.nursery} · {selectedLine.location.module} · {selectedLine.location.bed}</small>
-                      <h2>{selectedLine.location.line}</h2>
-                    </div>
-                    <span className={`map-state map-state--${visualState(selectedLine)}`}>{visualLabel(selectedLine)}</span>
-                  </div>
-                  <dl className="module-line-detail__values">
-                    <div><dt>Hembras</dt><dd>{selectedLine.count?.females ?? selectedLine.inventory?.females ?? "Sin dato"}</dd></div>
-                    <div><dt>Machos</dt><dd>{selectedLine.count?.males ?? selectedLine.inventory?.males ?? "Sin dato"}</dd></div>
-                    <div><dt>Patrones</dt><dd>{selectedLine.count?.rootstocks ?? selectedLine.inventory?.rootstocks ?? "Sin dato"}</dd></div>
-                    <div><dt>Total vivo</dt><dd>{selectedLine.count?.total ?? selectedLine.inventory?.total ?? "Sin dato"}</dd></div>
-                    <div><dt>Plantas muertas</dt><dd>{selectedLine.count?.deadPlants ?? "No registrado"}</dd></div>
-                    <div><dt>Estado central</dt><dd>{selectedLine.state}</dd></div>
-                  </dl>
-                  {selectedLine.count?.observations && <p className="module-line-detail__observations"><strong>Observaciones</strong>{selectedLine.count.observations}</p>}
-                  <p className="module-line-detail__source">
-                    {selectedLine.count ? `Conteo vigente · versión ${selectedLine.count.version}` : selectedLine.inventory ? `Inventario oficial · versión ${selectedLine.inventory.version}` : "Aún no hay conteo ni inventario disponible."}
-                  </p>
-                </>
-              )}
-            </aside>
-          </div>
-        </>
-      )}
-    </section>
-  );
+  return <section className="module-map" aria-labelledby="module-map-title"><div className="module-map__heading"><div><p className="eyebrow">PLANO PRODUCTIVO</p><h1 id="module-map-title">Mapa de módulos</h1><p>Estado actual por línea y lote, sin depender de una jornada seleccionada.</p></div>{modules.length > 0 && <label>Módulo<select value={selectedModule ?? ""} onChange={(event) => { setSelectedModule(event.target.value); setSelectedLineId(undefined); }}>{modules.map(([name, values]) => <option key={name} value={name}>{name} · {values.length} líneas</option>)}</select></label>}</div>
+    {error && <p className="alert" role="alert">{error}</p>}{busy && <p className="empty-state">Cargando plano…</p>}{!busy && !error && !modules.length && <p className="empty-state">No hay líneas activas para representar.</p>}
+    {!!lines.length && <><div className="module-map__summary"><span><i className="map-dot map-dot--completed" />{completed} realizadas</span><span><i className="map-dot map-dot--working" />{working} en proceso</span><span><i className="map-dot map-dot--pending" />{pending} pendientes</span></div><div className="module-map__layout"><div className="module-plan" aria-label={`Plano de ${selectedModule ?? "módulo"}`}><div className="module-plan__north">N ↑</div><div className="module-plan__gate">ACCESO</div><div className="module-plan__beds" style={{gridTemplateColumns: `repeat(${Math.max(beds.length, 1)}, minmax(170px, 1fr))`}}>{beds.map(([bed, values], index) => <div className="module-bed" key={bed}><h2>{bed}</h2><div className="module-bed__lines">{values.map((line) => <button key={line.catalog.id} type="button" className={`module-line module-line--${visualState(line)}${selectedLineId === line.catalog.id ? " module-line--selected" : ""}`} aria-label={`${line.catalog.displayName}: ${visualLabel(line)}`} title={`${line.catalog.displayName} · ${line.lot?.displayName ?? "Sin lote"}`} onClick={() => setSelectedLineId(line.catalog.id)}><span>{line.catalog.code}</span></button>)}</div>{index < beds.length - 1 && <span className="module-plan__corridor">CORREDOR</span>}</div>)}</div><div className="module-plan__gate">ACCESO</div></div>
+      <aside className="module-line-detail" aria-live="polite">{!selectedLine ? <div className="module-line-detail__empty"><strong>Seleccione una línea</strong><span>Pulse una barra para consultar inventario y lote.</span></div> : <><div className="module-line-detail__heading"><div><small>{selectedLine.nursery} · {selectedLine.module} · {selectedLine.bed}</small><h2>{selectedLine.catalog.displayName}</h2></div><span className={`map-state map-state--${visualState(selectedLine)}`}>{visualLabel(selectedLine)}</span></div><dl className="module-line-detail__values"><div><dt>Lote</dt><dd>{selectedLine.lot?.displayName ?? "Sin lote"}</dd></div><div><dt>Siembra</dt><dd>{selectedLine.lot?.sowingDate ?? "Sin dato"}</dd></div><div><dt>Hembras</dt><dd>{selectedLine.operational?.count?.females ?? selectedLine.catalog.inventory?.females ?? "Sin dato"}</dd></div><div><dt>Machos</dt><dd>{selectedLine.operational?.count?.males ?? selectedLine.catalog.inventory?.males ?? "Sin dato"}</dd></div><div><dt>Patrones</dt><dd>{selectedLine.operational?.count?.rootstocks ?? selectedLine.catalog.inventory?.rootstocks ?? "Sin dato"}</dd></div><div><dt>Total vivo</dt><dd>{selectedLine.operational?.count?.total ?? selectedLine.catalog.inventory?.total ?? "Sin dato"}</dd></div><div><dt>Plantas muertas</dt><dd>{selectedLine.operational?.count?.deadPlants ?? "No registrado"}</dd></div><div><dt>Labores</dt><dd>Sin información</dd></div></dl><p className="module-line-detail__source">{selectedLine.catalog.inventory ? `Inventario oficial · versión ${selectedLine.catalog.inventory.version}` : "Línea sin inventario oficial."}</p></>}</aside></div></>}
+  </section>;
 }

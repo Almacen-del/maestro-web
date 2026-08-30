@@ -620,11 +620,9 @@ export function App({repository, reportPlatform}: AppProps) {
         <LotsSection repository={repository} />
       ) : activeSection === "MAP" ? (
         <ModuleMapSection
+          repository={repository}
           snapshot={snapshot}
           loading={loading}
-          journeys={journeys}
-          selectedJourneyId={selectedJourneyId}
-          onSelectJourney={(journeyId) => startMonitoring(user, journeyId)}
         />
       ) : activeSection === "CATALOG" && user.canManageCatalog ? (
         <CatalogSection
