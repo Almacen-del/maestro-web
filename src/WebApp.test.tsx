@@ -19,6 +19,7 @@ function repository(user = admin): MonitorRepository {
     getGoogleDriveConnectionStatus: vi.fn().mockResolvedValue({state: "LISTO"}),
     revokeGoogleDriveOAuth: vi.fn().mockResolvedValue({state: "REVOCADO"}),
     listManageableUsers: vi.fn().mockResolvedValue([]),
+    listManageableCatalog: vi.fn().mockResolvedValue({locations: [], lines: []}),
   });
 }
 
@@ -38,7 +39,8 @@ describe("Vivero Maestro Web", () => {
     fireEvent.change(screen.getByLabelText("Contraseña"), {target: {value: "Ficticia123"}});
     fireEvent.click(screen.getByRole("button", {name: "Iniciar sesión"}));
     expect(await screen.findByRole("button", {name: "Catálogo"})).toBeEnabled();
-    expect(screen.getByRole("button", {name: "Jornadas"})).toBeEnabled();
+    expect(screen.getByRole("button", {name: "Inicio"})).toBeEnabled();
+    expect(screen.queryByRole("button", {name: "Jornadas"})).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", {name: "Usuarios"}));
     expect(await screen.findByRole("button", {name: "Crear usuario"})).toBeEnabled();
   });

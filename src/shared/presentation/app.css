@@ -380,6 +380,44 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
 .work-warning { color: #8a4b08; font-weight: 700; margin: 0; }
 .work-clear { color: #2d6840; margin: 0; }
 
+.admin-dashboard {
+  width: min(100% - 48px, 1180px);
+  margin: 0 auto;
+  padding: 52px 0 72px;
+}
+.admin-dashboard__heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.admin-dashboard__heading h1 { margin: 4px 0 7px; color: #0c4935; font-size: clamp(2.1rem, 4vw, 3.5rem); }
+.admin-dashboard__heading p { margin: 0; color: #52695b; }
+.dashboard-kpis { display: grid; grid-template-columns: repeat(6, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.dashboard-kpi { display: grid; align-content: space-between; min-height: 132px; gap: 10px; padding: 17px; border: 1px solid #cfe0d2; border-radius: 16px; background: #fff; box-shadow: 0 8px 22px rgb(18 57 44 / 6%); }
+.dashboard-kpi span { color: #52695b; font-size: .8rem; font-weight: 750; }
+.dashboard-kpi strong { color: #164c32; font-size: clamp(1.45rem, 2.5vw, 2.15rem); line-height: 1; }
+.dashboard-kpi strong small { color: #718078; font-size: .8rem; }
+.dashboard-kpi > small { color: #607168; font-size: .72rem; }
+.dashboard-kpi--primary { color: #fff; border-color: #176638; background: linear-gradient(145deg, #176638, #0c4935); }
+.dashboard-kpi--primary span, .dashboard-kpi--primary strong, .dashboard-kpi--primary > small { color: #fff; }
+.dashboard-kpi--warning { border-color: #e2b85f; background: #fff8e8; }
+.dashboard-kpi--warning strong { color: #985f08; }
+.dashboard-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr); gap: 18px; align-items: start; }
+.dashboard-panel { padding: 20px; border: 1px solid #cfe0d2; border-radius: 18px; background: #fff; box-shadow: 0 10px 28px rgb(18 57 44 / 6%); }
+.dashboard-panel h2 { margin: 4px 0 0; color: #164c32; }
+.dashboard-panel__heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.dashboard-panel__heading > span { padding: 6px 10px; border-radius: 999px; color: #28543d; background: #e7f3e9; font-size: .76rem; font-weight: 850; }
+.module-summary-list { display: grid; gap: 10px; }
+.module-summary-row { display: grid; grid-template-columns: minmax(180px, .65fr) minmax(0, 1.35fr); gap: 18px; align-items: center; padding: 14px; border-radius: 12px; background: #f4f8f4; }
+.module-summary-row > div { display: grid; gap: 4px; }
+.module-summary-row > div strong { color: #164c32; }
+.module-summary-row > div span { color: #65746c; font-size: .76rem; }
+.module-summary-row dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.module-summary-row dl div { display: grid; gap: 3px; }
+.module-summary-row dt { color: #68776e; font-size: .7rem; }
+.module-summary-row dd { margin: 0; color: #173f2f; font-weight: 850; }
+.dashboard-lots { display: grid; gap: 10px; }
+.dashboard-lots > p { margin: 0; color: #52695b; line-height: 1.55; }
+.dashboard-lots__pending { display: grid; gap: 5px; margin-top: 10px; padding: 14px; border-left: 4px solid #d09a2e; border-radius: 9px; background: #fff7e3; }
+.dashboard-lots__pending strong { color: #7c5511; }
+.dashboard-lots__pending span { color: #695b3e; font-size: .8rem; line-height: 1.45; }
+
 .module-map {
   width: min(100% - 48px, 1180px);
   margin: 0 auto;
@@ -526,6 +564,11 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
   .catalog-admin-filters { grid-template-columns: 1fr; }
   .catalog-tree-node > summary, .catalog-admin-line { align-items: flex-start; flex-direction: column; }
   .catalog-tree-children { margin-left: 8px; }
+  .admin-dashboard { width: min(100% - 28px, 1120px); padding-top: 36px; }
+  .admin-dashboard__heading { align-items: stretch; flex-direction: column; }
+  .dashboard-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-layout, .module-summary-row { grid-template-columns: 1fr; }
+  .module-summary-row dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .module-map { width: min(100% - 28px, 1120px); padding-top: 36px; }
   .module-map__heading { align-items: stretch; flex-direction: column; }
   .module-map__heading label { min-width: 0; }

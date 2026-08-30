@@ -10,6 +10,7 @@ import type {
 } from "../domain/MonitorModels";
 import {sortMonitorLines} from "../domain/MonitorModels";
 import {CatalogSection} from "./CatalogSection";
+import {DashboardSection} from "./DashboardSection";
 import {DraftJourneysSection} from "./DraftJourneysSection";
 import {InventoryReportsSection} from "./InventoryReportsSection";
 import type {ReportPlatform} from "./InventoryReportsSection";
@@ -74,8 +75,8 @@ export function App({repository, reportPlatform}: AppProps) {
   const [password, setPassword] = useState("");
   const [user, setUser] = useState<MonitorUser>();
   const [activeSection, setActiveSection] = useState<
-    "MONITOR" | "MAP" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
-  >("MONITOR");
+    "DASHBOARD" | "MONITOR" | "MAP" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
+  >("DASHBOARD");
   const [journeys, setJourneys] = useState<readonly MonitorJourney[]>([]);
   const [selectedJourneyId, setSelectedJourneyId] = useState<string>();
   const [snapshot, setSnapshot] = useState<MonitorSnapshot>();
@@ -476,6 +477,15 @@ export function App({repository, reportPlatform}: AppProps) {
       </div>
       {(user?.canReview || user?.canManageDraftJourneys || user?.canManageUsers || user?.canManageCatalog) && (
         <nav className="workspace-nav" aria-label="Secciones de Maestro">
+          {user.canManageCatalog && (
+            <button
+              className={activeSection === "DASHBOARD" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
+              type="button"
+              onClick={() => setActiveSection("DASHBOARD")}
+            >
+              Inicio
+            </button>
+          )}
           <button
             className={activeSection === "MONITOR" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
             type="button"
@@ -509,18 +519,6 @@ export function App({repository, reportPlatform}: AppProps) {
               Descartes
             </button>
           )}
-          <button
-            className={activeSection === "JOURNEYS" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-            type="button"
-            onClick={() => {
-              setReviewDialog(undefined);
-              setReassignmentDialog(undefined);
-              setReleaseDialog(undefined);
-              setActiveSection("JOURNEYS");
-            }}
-          >
-            Jornadas
-          </button>
           {user.canReview && (
             <button
               className={activeSection === "REPORTS" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
@@ -610,6 +608,8 @@ export function App({repository, reportPlatform}: AppProps) {
         <UsersSection repository={repository} currentUser={user} />
       ) : activeSection === "REPORTS" && user.canReview ? (
         <InventoryReportsSection repository={repository} currentUser={user} platform={reportPlatform} />
+      ) : activeSection === "DASHBOARD" && user.canManageCatalog ? (
+        <DashboardSection repository={repository} />
       ) : activeSection === "MAP" ? (
         <ModuleMapSection
           snapshot={snapshot}
