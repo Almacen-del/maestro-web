@@ -3,6 +3,35 @@ import {expect, it, vi} from "vitest";
 import {DisabledMonitorRepository} from "../data/FirebaseMonitorRepository";
 import {InventorySection} from "./InventorySection";
 
+it("filtra camas, recalcula el total y reinicia la cama al cambiar módulo", async () => {
+  const repository = Object.assign(new DisabledMonitorRepository(), {
+    listManageableCatalog: vi.fn().mockResolvedValue({locations: [
+      {id: "m1", type: "MODULO", displayName: "Módulo 1"},
+      {id: "c1", type: "CAMA", parentId: "m1", displayName: "Cama 1", order: 1},
+      {id: "c2", type: "CAMA", parentId: "m1", displayName: "Cama 2", order: 2},
+      {id: "m2", type: "MODULO", displayName: "Módulo 2"},
+    ], lines: [
+      {id: "a", locationId: "c1", active: true, code: "L1", displayName: "Primera cama", inventory: {total: 10, females: 10, males: 0, rootstocks: 0}},
+      {id: "b", locationId: "c2", active: true, code: "L1", displayName: "Segunda cama", inventory: {total: 20, females: 20, males: 0, rootstocks: 0}},
+      {id: "c", locationId: "m2", active: true, code: "L1", displayName: "Otro módulo", inventory: {total: 5, females: 5, males: 0, rootstocks: 0}},
+    ]}),
+  });
+  render(<InventorySection repository={repository} />);
+  await screen.findByText("35 plantas visibles");
+  fireEvent.change(screen.getByLabelText("Filtrar por módulo"), {target: {value: "m1"}});
+  expect(screen.getByText("30 plantas visibles")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", {name: "Cama 2"}));
+  expect(screen.getByText("20 plantas visibles")).toBeInTheDocument();
+  expect(screen.queryByText("Primera cama")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", {name: "Cama 2"})).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(screen.getByRole("button", {name: "Todas las camas"}));
+  expect(screen.getByText("30 plantas visibles")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", {name: "Cama 1"}));
+  fireEvent.change(screen.getByLabelText("Filtrar por módulo"), {target: {value: "m2"}});
+  expect(screen.getByText("5 plantas visibles")).toBeInTheDocument();
+  expect(screen.queryByRole("group", {name: "Filtrar por cama"})).not.toBeInTheDocument();
+});
+
 it("consulta y filtra módulos y germinadores sin depender de lotes", async () => {
   const repository = Object.assign(new DisabledMonitorRepository(), {
     listManageableCatalog: vi.fn().mockResolvedValue({locations: [
