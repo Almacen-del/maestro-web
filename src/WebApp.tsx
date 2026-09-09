@@ -8,7 +8,6 @@ export function WebApp({repository, configurationError}: {
   readonly configurationError?: string;
 }) {
   return <>
-    <div className="web-edition" role="note">VIVERO MAESTRO · VERSIÓN WEB</div>
     {configurationError && <p className="web-configuration-error" role="alert">{configurationError}</p>}
     <App repository={repository} reportPlatform={webPlatform} />
   </>;

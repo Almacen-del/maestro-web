@@ -478,7 +478,7 @@ export function App({repository, reportPlatform}: AppProps) {
 
   return (
     <main className={user ? `app-shell nursery-shell${sidebarCollapsed ? " nursery-shell--collapsed" : ""}` : "app-shell"}>
-      <header className="topbar">
+      {!user && <header className="topbar">
         <div>
           <span className="brand-mark" aria-hidden="true">VC</span>
           <div>
@@ -486,16 +486,11 @@ export function App({repository, reportPlatform}: AppProps) {
             <small>Propagación de material vegetal</small>
           </div>
         </div>
-        {user && (
-          <div className="session">
-            <span>{user.displayName} · {user.role}</span>
-          </div>
-        )}
-      </header>
+      </header>}
 
-      <div className={environmentClass}>
+      {(!user || !production) && <div className={environmentClass}>
         {environmentLabel}
-      </div>
+      </div>}
       {user && <NurserySidebar user={user} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((value) => !value)} onHome={() => setActiveSection("DASHBOARD")} onSignOut={() => void handleSignOut()} />}
 
       {restoringSession ? <p role="status">Restaurando sesión…</p> : !user ? (

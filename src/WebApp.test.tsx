@@ -48,7 +48,7 @@ describe("Vivero Maestro Web", () => {
   });
   it("muestra acceso sin Electron y falla cerrado sin configuración", () => {
     render(<WebApp repository={new DisabledMonitorRepository()} configurationError="Falta VITE_APP_ENV" />);
-    expect(screen.getByText(/VERSIÓN WEB/)).toBeInTheDocument();
+    expect(screen.queryByText(/VERSIÓN WEB/)).not.toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Falta VITE_APP_ENV");
     expect(screen.getByRole("button", {name: "Iniciar sesión"})).toBeDisabled();
   });
