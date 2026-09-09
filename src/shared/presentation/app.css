@@ -772,3 +772,15 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
 .nursery-sidebar { transition: width .2s ease; }
 @media (max-width: 760px) { .nursery-sidebar, .nursery-shell--collapsed .nursery-sidebar { position: static; min-height: auto; flex-direction: row; } .nursery-toggle, .nursery-shell--collapsed .nursery-toggle { position: static; width: 36px; height: 36px; } .nursery-home { padding: 16px 12px; } .nursery-hero, .nursery-home-grid { grid-template-columns: 1fr; } .nursery-hero > div { padding: 8px 0; } .nursery-home .nursery-total { border-left: 0; border-top: 1px solid #d1dbcc; padding: 20px 0 0; } }
 @media (prefers-reduced-motion: reduce) { .nursery-shell, .nursery-sidebar { transition: none; } }
+
+/* Tres superficies: marfil, bosque y salvia, sin volumen añadido. */
+.nursery-shell { background: #f7f6f0; }
+.nursery-hero { align-items: stretch; gap: 22px; }
+.nursery-hero > div { background: #204d38; padding: clamp(24px, 3vw, 40px); border-radius: 4px; display: flex; flex-direction: column; justify-content: center; }
+.nursery-hero h1 { color: #faf7eb; }
+.nursery-hero h1 em { color: #d2e1bd; }
+.nursery-hero > div .eyebrow { color: #d2e1bd; }
+.nursery-hero > div > p:last-child { color: #e1e9d9; }
+.nursery-home .nursery-total { background: #dfe8d6; border: 0; border-radius: 4px; padding: clamp(24px, 3vw, 40px); box-shadow: none; justify-content: center; }
+.nursery-total > strong, .nursery-total h2 { color: #204d38; }
+.nursery-total > span, .nursery-total small { color: #455d43; }
