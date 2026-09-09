@@ -31,10 +31,10 @@ describe("Vivero Maestro Web", () => {
   it("restaura la sesión al volver a montar la página sin pedir contraseña", async () => {
     const repo = Object.assign(repository(), {restoreSession: vi.fn().mockResolvedValue(admin)});
     const first = render(<WebApp repository={repo} />);
-    expect(await screen.findByRole("button", {name: "Administración"})).toBeEnabled();
+    expect(await screen.findByRole("button", {name: "Administración"})).toBeDisabled();
     first.unmount();
     render(<WebApp repository={repo} />);
-    expect(await screen.findByRole("button", {name: "Administración"})).toBeEnabled();
+    expect(await screen.findByRole("button", {name: "Administración"})).toBeDisabled();
     expect(repo.signIn).not.toHaveBeenCalled();
     expect(repo.restoreSession).toHaveBeenCalledTimes(2);
   });
@@ -52,21 +52,25 @@ describe("Vivero Maestro Web", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Falta VITE_APP_ENV");
     expect(screen.getByRole("button", {name: "Iniciar sesión"})).toBeDisabled();
   });
-  it("permite acceso y navegación administrativa mediante el repositorio existente", async () => {
+  it("permite solo el menú principal durante la reestructuración", async () => {
     const repo = repository();
     render(<WebApp repository={repo} />);
     fireEvent.change(screen.getByLabelText("Correo"), {target: {value: "admin@prueba.local"}});
     fireEvent.change(screen.getByLabelText("Contraseña"), {target: {value: "Ficticia123"}});
     fireEvent.click(screen.getByRole("button", {name: "Iniciar sesión"}));
-    expect(await screen.findByRole("button", {name: "Administración"})).toBeEnabled();
-    expect(screen.getByRole("button", {name: "Inicio"})).toBeEnabled();
-    expect(screen.getByRole("button", {name: "Inventario"})).toBeEnabled();
-    expect(screen.getByRole("button", {name: "Conteos"})).toBeEnabled();
+    expect(await screen.findByRole("button", {name: "Administración"})).toBeDisabled();
+    expect(screen.getByRole("button", {name: "Menú principal"})).toBeEnabled();
+    expect(screen.getByRole("button", {name: "Inventario"})).toBeDisabled();
+    expect(screen.getByRole("button", {name: "Conteos"})).toBeDisabled();
     expect(screen.queryByRole("button", {name: "Jornadas"})).not.toBeInTheDocument();
-    expect(screen.getByRole("button", {name: "Labores"})).toBeEnabled();
+    expect(screen.queryByRole("button", {name: "Labores"})).not.toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "Mapa"})).toBeDisabled();
     fireEvent.click(screen.getByRole("button", {name: "Administración"}));
-    fireEvent.click(await screen.findByRole("button", {name: /Usuarios/}));
-    expect(await screen.findByRole("button", {name: "Crear usuario"})).toBeEnabled();
+    expect(screen.queryByRole("button", {name: "Crear usuario"})).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", {name: /Propagación de\s*material vegetal/})).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", {name: "Colapsar menú"}));
+    expect(screen.getByRole("button", {name: "Expandir menú"})).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByAltText("Arles")).toBeInTheDocument();
   });
   it("no expone administración a auxiliares", async () => {
     const user = {...admin, role: "AUXILIAR" as const, canReview: false, canManageUsers: false,

@@ -11,12 +11,12 @@ import type {
 import {sortMonitorLines} from "../domain/MonitorModels";
 import {CatalogSection} from "./CatalogSection";
 import {AdministrationSection, type AdministrationDestination} from "./AdministrationSection";
-import {DashboardSection} from "./DashboardSection";
+import {NurserySidebar} from "./NurserySidebar";
+import {NurseryHomeSection} from "./NurseryHomeSection";
 import {CountStatisticsSection} from "./CountStatisticsSection";
 import {DraftJourneysSection} from "./DraftJourneysSection";
 import {InventoryReportsSection} from "./InventoryReportsSection";
 import {InventorySection} from "./InventorySection";
-import {LaborsSection} from "./LaborsSection";
 import {LotsSection} from "./LotsSection";
 import type {ReportPlatform} from "./InventoryReportsSection";
 import {DiscardsSection} from "./DiscardsSection";
@@ -80,8 +80,9 @@ export function App({repository, reportPlatform}: AppProps) {
   const [password, setPassword] = useState("");
   const [user, setUser] = useState<MonitorUser>();
   const [restoringSession, setRestoringSession] = useState(Boolean(repository.restoreSession));
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState<
-    "DASHBOARD" | "MONITOR" | "STATISTICS" | "MAP" | "INVENTORY" | "LABORS" | "ADMIN" | "LOTS" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
+    "DASHBOARD" | "MONITOR" | "STATISTICS" | "MAP" | "INVENTORY" | "ADMIN" | "LOTS" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
   >("DASHBOARD");
   const [journeys, setJourneys] = useState<readonly MonitorJourney[]>([]);
   const [selectedJourneyId, setSelectedJourneyId] = useState<string>();
@@ -476,21 +477,18 @@ export function App({repository, reportPlatform}: AppProps) {
       : "environment-banner";
 
   return (
-    <main className="app-shell">
+    <main className={user ? `app-shell nursery-shell${sidebarCollapsed ? " nursery-shell--collapsed" : ""}` : "app-shell"}>
       <header className="topbar">
         <div>
           <span className="brand-mark" aria-hidden="true">VC</span>
           <div>
             <strong>Vivero Maestro</strong>
-            <small>Revisión transaccional de conteos y descartes</small>
+            <small>Propagación de material vegetal</small>
           </div>
         </div>
         {user && (
           <div className="session">
             <span>{user.displayName} · {user.role}</span>
-            <button className="button button--secondary" type="button" onClick={handleSignOut}>
-              Cerrar sesión
-            </button>
           </div>
         )}
       </header>
@@ -498,37 +496,7 @@ export function App({repository, reportPlatform}: AppProps) {
       <div className={environmentClass}>
         {environmentLabel}
       </div>
-      {(user?.canReview || user?.canManageDraftJourneys || user?.canManageUsers || user?.canManageCatalog) && (
-        <nav className="workspace-nav" aria-label="Secciones de Maestro">
-          {user.canManageCatalog && (
-            <button
-              className={activeSection === "DASHBOARD" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-              type="button"
-              onClick={() => setActiveSection("DASHBOARD")}
-            >
-              Inicio
-            </button>
-          )}
-          {user.canManageCatalog && <button
-            className={activeSection === "MAP" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-            type="button"
-            onClick={() => {
-              setReviewDialog(undefined);
-              setReassignmentDialog(undefined);
-              setReleaseDialog(undefined);
-              setActiveSection("MAP");
-            }}
-          >
-            Mapa
-          </button>}
-          {user.canManageCatalog && <button className={activeSection === "INVENTORY" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("INVENTORY")}>Inventario</button>}
-          {user.canManageCatalog && <button className={activeSection === "STATISTICS" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("STATISTICS")}>Conteos</button>}
-          {user.canManageCatalog && <button className={activeSection === "LABORS" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("LABORS")}>Labores</button>}
-          {user.role === "ADMINISTRADOR" && <button className={activeSection === "ADMIN" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("ADMIN")}>Administración</button>}
-          {!user.canManageCatalog && user.canReview && <button className={activeSection === "MONITOR" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("MONITOR")}>Revisión</button>}
-          {!user.canManageCatalog && user.canReview && <button className={activeSection === "DISCARDS" ? "workspace-tab workspace-tab--active" : "workspace-tab"} type="button" onClick={() => setActiveSection("DISCARDS")}>Descartes</button>}
-        </nav>
-      )}
+      {user && <NurserySidebar user={user} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((value) => !value)} onHome={() => setActiveSection("DASHBOARD")} onSignOut={() => void handleSignOut()} />}
 
       {restoringSession ? <p role="status">Restaurando sesión…</p> : !user ? (
         <section className="login-panel" aria-labelledby="login-title">
@@ -554,6 +522,10 @@ export function App({repository, reportPlatform}: AppProps) {
             </button>
           </form>
         </section>
+      ) : !user.canManageCatalog ? (
+        <section className="nursery-home"><h1>Secciones en preparación</h1><p>El acceso a las demás secciones está temporalmente desactivado.</p></section>
+      ) : user.canManageCatalog ? (
+        <NurseryHomeSection repository={repository} />
       ) : activeSection === "DISCARDS" && user.canReview ? (
         <DiscardsSection repository={repository} user={user} />
       ) : activeSection === "USERS" && user.canManageUsers ? (
@@ -561,13 +533,11 @@ export function App({repository, reportPlatform}: AppProps) {
       ) : activeSection === "REPORTS" && user.canReview ? (
         <InventoryReportsSection repository={repository} currentUser={user} platform={reportPlatform} />
       ) : activeSection === "DASHBOARD" && user.canManageCatalog ? (
-        <DashboardSection repository={repository} />
+        <NurseryHomeSection repository={repository} />
       ) : activeSection === "STATISTICS" && user.canManageCatalog ? (
         <CountStatisticsSection repository={repository} />
       ) : activeSection === "INVENTORY" && user.canManageCatalog ? (
         <InventorySection repository={repository} />
-      ) : activeSection === "LABORS" && user.canManageCatalog ? (
-        <LaborsSection />
       ) : activeSection === "ADMIN" && user.role === "ADMINISTRADOR" ? (
         <AdministrationSection onOpen={(destination: AdministrationDestination) => setActiveSection(destination)} />
       ) : activeSection === "LOTS" && user.canManageCatalog ? (
