@@ -527,6 +527,7 @@ export interface MonitorRepository {
   readonly environment: "EMULATOR" | "PRODUCTION" | "DISABLED";
   readonly emulatorEnabled: boolean;
   signIn(email: string, password: string): Promise<MonitorUser>;
+  restoreSession?(): Promise<MonitorUser | undefined>;
   signOut(): Promise<void>;
   observeAccountStatus(
     userId: string,

@@ -28,6 +28,24 @@ function repository(user = admin): MonitorRepository {
 afterEach(() => vi.restoreAllMocks());
 
 describe("Vivero Maestro Web", () => {
+  it("restaura la sesión al volver a montar la página sin pedir contraseña", async () => {
+    const repo = Object.assign(repository(), {restoreSession: vi.fn().mockResolvedValue(admin)});
+    const first = render(<WebApp repository={repo} />);
+    expect(await screen.findByRole("button", {name: "Administración"})).toBeEnabled();
+    first.unmount();
+    render(<WebApp repository={repo} />);
+    expect(await screen.findByRole("button", {name: "Administración"})).toBeEnabled();
+    expect(repo.signIn).not.toHaveBeenCalled();
+    expect(repo.restoreSession).toHaveBeenCalledTimes(2);
+  });
+
+  it("no concede acceso si restaurar la sesión falla", async () => {
+    const repo = Object.assign(repository(), {restoreSession: vi.fn().mockRejectedValue(new Error("Cuenta desactivada"))});
+    render(<WebApp repository={repo} />);
+    expect(await screen.findByRole("button", {name: "Iniciar sesión"})).toBeEnabled();
+    expect(screen.queryByRole("button", {name: "Administración"})).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Cuenta desactivada");
+  });
   it("muestra acceso sin Electron y falla cerrado sin configuración", () => {
     render(<WebApp repository={new DisabledMonitorRepository()} configurationError="Falta VITE_APP_ENV" />);
     expect(screen.getByText(/VERSIÓN WEB/)).toBeInTheDocument();

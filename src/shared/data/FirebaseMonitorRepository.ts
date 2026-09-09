@@ -1,14 +1,14 @@
 import {getApps, initializeApp} from "firebase/app";
 import {SessionReadCache} from "./SessionReadCache";
-import {connectAuthEmulator, getAuth, signInWithEmailAndPassword} from "firebase/auth";
+import {browserLocalPersistence, setPersistence, connectAuthEmulator, getAuth, signInWithEmailAndPassword} from "firebase/auth";
 import {connectFunctionsEmulator, getFunctions, httpsCallable, type Functions} from "firebase/functions";
 import {
   Timestamp,
   collection,
   connectFirestoreEmulator,
   doc,
-  getDoc,
   getFirestore,
+  getDocFromServer,
   onSnapshot,
   query,
   where,
@@ -848,15 +848,24 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   async signIn(email: string, password: string): Promise<MonitorUser> {
     this.readCache.clear();
     try {
+      await setPersistence(this.auth, browserLocalPersistence);
       const credential = await signInWithEmailAndPassword(this.auth, email.trim(), password);
-      const profile = await getDoc(doc(this.firestore, "usuarios", credential.user.uid));
+      return await this.readSessionProfile(credential.user.uid);
+    } catch (error) {
+      await this.auth.signOut();
+      throw new Error(error instanceof Error ? error.message : "No fue posible iniciar sesión.", {cause: error});
+    }
+  }
+
+  private async readSessionProfile(uid: string): Promise<MonitorUser> {
+      const profile = await getDocFromServer(doc(this.firestore, "usuarios", uid));
       if (!profile.exists()) throw new Error("La cuenta no tiene un perfil operativo.");
       if (profile.data().activo !== true) throw new Error("La cuenta está inactiva.");
       const roles = profile.data().roles;
       const role = Array.isArray(roles) ? roles.find(isRole) : undefined;
       if (!role) throw new Error("La cuenta no tiene un rol operativo.");
       return {
-        id: credential.user.uid,
+        id: uid,
         displayName: typeof profile.data().nombreVisible === "string"
           ? profile.data().nombreVisible
           : "Usuario",
@@ -868,10 +877,16 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         canManageUsers: role === "ADMINISTRADOR",
         canManageCatalog: role === "ADMINISTRADOR",
       };
-    } catch (error) {
-      await this.auth.signOut();
-      throw new Error(error instanceof Error ? error.message : "No fue posible iniciar sesión.", {cause: error});
-    }
+  }
+
+  async restoreSession(): Promise<MonitorUser | undefined> {
+    await this.auth.authStateReady();
+    const current = this.auth.currentUser;
+    if (!current) return undefined;
+    await current.getIdToken(true);
+    const profile = await this.readSessionProfile(current.uid);
+    if (this.auth.currentUser?.uid !== current.uid) return undefined;
+    return profile;
   }
 
   async signOut(): Promise<void> {

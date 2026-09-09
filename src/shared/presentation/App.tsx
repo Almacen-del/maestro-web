@@ -79,6 +79,7 @@ export function App({repository, reportPlatform}: AppProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState<MonitorUser>();
+  const [restoringSession, setRestoringSession] = useState(Boolean(repository.restoreSession));
   const [activeSection, setActiveSection] = useState<
     "DASHBOARD" | "MONITOR" | "STATISTICS" | "MAP" | "INVENTORY" | "LABORS" | "ADMIN" | "LOTS" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
   >("DASHBOARD");
@@ -122,6 +123,23 @@ export function App({repository, reportPlatform}: AppProps) {
       setError,
     );
   };
+
+  useEffect(() => {
+    if (!repository.restoreSession) return;
+    let cancelled = false;
+    void repository.restoreSession().then(async (restored) => {
+      if (cancelled || !restored) return;
+      setUser(restored);
+      setActiveSection(restored.canManageCatalog ? "DASHBOARD" : "MONITOR");
+      const activeJourneys = await repository.listActiveJourneys();
+      if (cancelled) return;
+      setJourneys(activeJourneys);
+      if (activeJourneys.length === 1 && activeJourneys[0]) startMonitoring(restored, activeJourneys[0].id);
+    }).catch((reason: unknown) => {
+      if (!cancelled) setError(reason instanceof Error ? reason.message : "No fue posible restaurar la sesión.");
+    }).finally(() => { if (!cancelled) setRestoringSession(false); });
+    return () => { cancelled = true; };
+  }, [repository]);
 
   const handleSignIn = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -512,7 +530,7 @@ export function App({repository, reportPlatform}: AppProps) {
         </nav>
       )}
 
-      {!user ? (
+      {restoringSession ? <p role="status">Restaurando sesión…</p> : !user ? (
         <section className="login-panel" aria-labelledby="login-title">
           <p className="eyebrow">ETAPA 20</p>
           <h1 id="login-title">Acceso a revisión</h1>
