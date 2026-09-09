@@ -43,15 +43,13 @@ export function DashboardSection({repository}: DashboardSectionProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
 
-  const load = async () => {
+  const load = async (reuse = false) => {
     setLoading(true);
     setError(undefined);
     try {
-      const [nextCatalog, nextLots] = await Promise.all([
-        repository.listManageableCatalog(), repository.listManageableLots(),
+      await Promise.all([
+        repository.listManageableCatalog(reuse).then(setCatalog), repository.listManageableLots(reuse).then(setLots),
       ]);
-      setCatalog(nextCatalog);
-      setLots(nextLots);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No fue posible cargar el resumen administrativo.");
     } finally {
@@ -59,7 +57,7 @@ export function DashboardSection({repository}: DashboardSectionProps) {
     }
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(true); }, []);
 
   const summary = useMemo(() => {
     const lines = catalog?.lines.filter((line) => line.active) ?? [];

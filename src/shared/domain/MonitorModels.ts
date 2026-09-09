@@ -584,8 +584,8 @@ export interface MonitorRepository {
     reason: string,
     idempotencyKey: string,
   ): Promise<ManageableUser>;
-  listManageableCatalog(): Promise<ManageableCatalogData>;
-  listManageableLots(): Promise<readonly ProductionLotSummary[]>;
+  listManageableCatalog(reuse?: boolean): Promise<ManageableCatalogData>;
+  listManageableLots(reuse?: boolean): Promise<readonly ProductionLotSummary[]>;
   listManageableCountStatistics(): Promise<ManageableCountStatistics>;
   createProductionLot(
     displayName: string,

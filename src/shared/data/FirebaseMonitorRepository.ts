@@ -1,4 +1,5 @@
 import {getApps, initializeApp} from "firebase/app";
+import {SessionReadCache} from "./SessionReadCache";
 import {connectAuthEmulator, getAuth, signInWithEmailAndPassword} from "firebase/auth";
 import {connectFunctionsEmulator, getFunctions, httpsCallable, type Functions} from "firebase/functions";
 import {
@@ -810,6 +811,7 @@ function parseMigrationReversalResult(value: unknown): MigrationReversalResult {
 }
 
 export class FirebaseMonitorRepository implements MonitorRepository {
+  private readonly readCache = new SessionReadCache();
   readonly emulatorEnabled: boolean;
 
   private constructor(
@@ -842,6 +844,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   }
 
   async signIn(email: string, password: string): Promise<MonitorUser> {
+    this.readCache.clear();
     try {
       const credential = await signInWithEmailAndPassword(this.auth, email.trim(), password);
       const profile = await getDoc(doc(this.firestore, "usuarios", credential.user.uid));
@@ -870,6 +873,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   }
 
   async signOut(): Promise<void> {
+    this.readCache.clear();
     await this.auth.signOut();
   }
 
@@ -881,6 +885,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
     return onSnapshot(
       doc(this.firestore, "usuarios", userId),
       (snapshot) => {
+        this.readCache.clear();
         if (!snapshot.exists()) {
           onError("La cuenta ya no tiene un perfil operativo.");
           return;
@@ -997,7 +1002,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         password,
         rol: role,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       if (
         typeof response.data !== "object" ||
         response.data === null ||
@@ -1040,7 +1045,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         nuevoEstado: active ? "ACTIVO" : "INACTIVO",
         motivo: reason,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       if (
         typeof response.data !== "object" ||
         response.data === null ||
@@ -1069,7 +1074,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         nuevoRol: role,
         motivo: reason,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       if (
         typeof response.data !== "object" ||
         response.data === null ||
@@ -1083,7 +1088,13 @@ export class FirebaseMonitorRepository implements MonitorRepository {
     }
   }
 
-  async listManageableCatalog(): Promise<ManageableCatalogData> {
+  async listManageableCatalog(reuse = false): Promise<ManageableCatalogData> {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) { this.readCache.clear(); throw new Error("Inicia sesión para consultar datos."); }
+    return this.readCache.read(uid + ":catalog", () => this.fetchManageableCatalog(), reuse);
+  }
+
+  private async fetchManageableCatalog(): Promise<ManageableCatalogData> {
     const callable = httpsCallable<Record<string, never>, {ubicaciones: unknown[]; lineas: unknown[]}>(
       this.functions, "listarCatalogoAdministrable"
     );
@@ -1101,7 +1112,13 @@ export class FirebaseMonitorRepository implements MonitorRepository {
     }
   }
 
-  async listManageableLots(): Promise<readonly ProductionLotSummary[]> {
+  async listManageableLots(reuse = false): Promise<readonly ProductionLotSummary[]> {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) { this.readCache.clear(); throw new Error("Inicia sesión para consultar datos."); }
+    return this.readCache.read(uid + ":lots", () => this.fetchManageableLots(), reuse);
+  }
+
+  private async fetchManageableLots(): Promise<readonly ProductionLotSummary[]> {
     const callable = httpsCallable<Record<string, never>, {lotes: unknown[]}>(this.functions, "listarLotesAdministrables");
     try {
       const response = await callable({});
@@ -1126,7 +1143,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
     const response = await callable({
       nombreVisible: displayName, fechaSiembra: sowingDate,
       especie: species ?? null, variedad: variety ?? null, claveIdempotencia: idempotencyKey,
-    });
+    }).finally(() => this.readCache.clear());
     return parseProductionLot(response.data);
   }
 
@@ -1136,7 +1153,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
     const callable = httpsCallable(this.functions, "actualizarLineasLote");
     const response = await callable({
       loteId: lotId, versionEsperada: expectedVersion, lineaIds: lineIds, claveIdempotencia: idempotencyKey,
-    });
+    }).finally(() => this.readCache.clear());
     return parseProductionLot(response.data);
   }
 
@@ -1153,7 +1170,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
       const response = await callable({
         codigo: code, tipo: type, ubicacionPadreId: parentId ?? null,
         nombreVisible: displayName, orden: order, claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       return parseCatalogLocation(response.data);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible crear la ubicacion.", {cause: error});
@@ -1174,7 +1191,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         ubicacionId: location.id, versionEsperada: location.version,
         nombreVisible: displayName, orden: order, activa: active,
         motivo: reason, claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       return parseCatalogLocation(response.data);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible actualizar la ubicacion.", {cause: error});
@@ -1193,7 +1210,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
       const response = await callable({
         ubicacionId: locationId, codigo: code, nombreVisible: displayName,
         orden: order, claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       return parseCatalogLine(response.data);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible crear la linea.", {cause: error});
@@ -1214,7 +1231,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         lineaId: line.id, versionEsperada: line.version,
         nombreVisible: displayName, orden: order, activa: active,
         motivo: reason, claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       return parseCatalogLine(response.data);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible actualizar la linea.", {cause: error});
@@ -1235,7 +1252,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         lineaId: line.id, versionLineaEsperada: line.version,
         hembras: females, machos: males, patrones: rootstocks,
         referenciaFuente: sourceReference, claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible registrar el inventario inicial.", {cause: error});
     }
@@ -1262,7 +1279,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         hashEsperado: expectedHash,
         confirmacionHash: expectedHash,
         claveIdempotencia: idempotencyKey,
-      })).data);
+      }).finally(() => this.readCache.clear())).data);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible importar el paquete.", {cause: error});
     }
@@ -1294,7 +1311,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         versionEsperada: migrationImport.version,
         motivo: reason,
         claveIdempotencia: idempotencyKey,
-      })).data);
+      }).finally(() => this.readCache.clear())).data);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible revertir la importación.", {cause: error});
     }
@@ -1311,7 +1328,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         nombreVisible: displayName,
         ...(configuracionInformeInventario ? {configuracionInformeInventario} : {}),
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       return parseDraftJourney(response.data);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible crear el borrador.", {cause: error});
@@ -1325,7 +1342,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   ): Promise<void> {
     const callable = httpsCallable(this.functions, "actualizarLineasJornadaBorrador");
     try {
-      await callable({jornadaId: journeyId, lineaIds: lineIds, claveIdempotencia: idempotencyKey});
+      await callable({jornadaId: journeyId, lineaIds: lineIds, claveIdempotencia: idempotencyKey}).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible guardar la selecciÃ³n.", {cause: error});
     }
@@ -1378,7 +1395,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
           puedeContar: participant.canCount,
         })),
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible guardar participantes.", {cause: error});
     }
@@ -1397,7 +1414,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         versionSeleccionLineasEsperada: versions.lineSelection,
         versionSeleccionParticipantesEsperada: versions.participantSelection,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       if (typeof response.data !== "object" || response.data === null) {
         throw new Error("La respuesta de activación no tiene formato válido.");
       }
@@ -1432,7 +1449,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         conteoId: countId,
         claveIdempotencia: idempotencyKey,
         ...(exceptionReason === undefined ? {} : {motivoExcepcion: exceptionReason}),
-      });
+      }).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible aprobar el conteo.", {cause: error});
     }
@@ -1451,7 +1468,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         versionEsperada: expectedVersion,
         motivo: reason,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       if (typeof response.data !== "object" || response.data === null) {
         throw new Error("La respuesta de cancelacion no tiene formato valido.");
       }
@@ -1478,7 +1495,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         jornadaId: journeyId,
         versionEsperada: expectedVersion,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       if (typeof response.data !== "object" || response.data === null) {
         throw new Error("La respuesta de reapertura no tiene formato valido.");
       }
@@ -1508,7 +1525,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         jornadaId: journeyId,
         versionEsperada: expectedVersion,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       return parseCloseJourneyOutcome(response.data, journeyId, true);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible cerrar la jornada.", {cause: error});
@@ -1526,7 +1543,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         jornadaId: journeyId,
         versionEsperada: expectedVersion,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
       const outcome = parseCloseJourneyOutcome(response.data, journeyId, false);
       if (outcome.state !== "CERRANDO") {
         throw new Error("La respuesta del reintento de cierre no tiene formato valido.");
@@ -1560,7 +1577,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   async retryInventoryReport(request: RetryInventoryReportRequest): Promise<void> {
     const callable = httpsCallable(this.functions, "reintentarInformeInventario");
     try {
-      await callable(request);
+      await callable(request).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "No fue posible reintentar el informe de inventario.",
@@ -1655,7 +1672,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   async returnCount(countId: string, reason: string, idempotencyKey: string): Promise<void> {
     const callable = httpsCallable(this.functions, "devolverConteo");
     try {
-      await callable({conteoId: countId, motivo: reason, claveIdempotencia: idempotencyKey});
+      await callable({conteoId: countId, motivo: reason, claveIdempotencia: idempotencyKey}).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible devolver el conteo.", {cause: error});
     }
@@ -1668,7 +1685,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         descarteId: discardId,
         claveIdempotencia: idempotencyKey,
         ...(exceptionReason === undefined ? {} : {motivoExcepcion: exceptionReason}),
-      });
+      }).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible aprobar el descarte.", {cause: error});
     }
@@ -1677,7 +1694,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   async returnDiscard(discardId: string, reason: string, idempotencyKey: string): Promise<void> {
     const callable = httpsCallable(this.functions, "devolverDescarte");
     try {
-      await callable({descarteId: discardId, motivo: reason, claveIdempotencia: idempotencyKey});
+      await callable({descarteId: discardId, motivo: reason, claveIdempotencia: idempotencyKey}).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible devolver el descarte.", {cause: error});
     }
@@ -1721,7 +1738,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
         nuevoUsuarioId: newUserId,
         motivo: reason,
         claveIdempotencia: idempotencyKey,
-      });
+      }).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible reasignar la corrección.", {cause: error});
     }
@@ -1730,7 +1747,7 @@ export class FirebaseMonitorRepository implements MonitorRepository {
   async releaseReservation(reservationId: string, reason: string, idempotencyKey: string): Promise<void> {
     const callable = httpsCallable(this.functions, "liberarReservaLinea");
     try {
-      await callable({reservaId: reservationId, motivo: reason, claveIdempotencia: idempotencyKey});
+      await callable({reservaId: reservationId, motivo: reason, claveIdempotencia: idempotencyKey}).finally(() => this.readCache.clear());
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : "No fue posible liberar la reserva.", {cause: error});
     }

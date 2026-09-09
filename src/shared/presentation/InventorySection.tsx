@@ -8,7 +8,7 @@ export function InventorySection({repository}: {readonly repository: MonitorRepo
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(true);
-  useEffect(() => { void repository.listManageableCatalog().then(setCatalog).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "No fue posible cargar el inventario.")).finally(() => setLoading(false)); }, [repository]);
+  useEffect(() => { void repository.listManageableCatalog(true).then(setCatalog).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "No fue posible cargar el inventario.")).finally(() => setLoading(false)); }, [repository]);
   const moduleByLine = useMemo(() => {
     const locations = new Map(catalog.locations.map((item) => [item.id, item]));
     return new Map(catalog.lines.map((line) => {
