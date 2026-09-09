@@ -729,33 +729,46 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
 .nursery-home .button--secondary:hover:not(:disabled) { background: #e7f4e4; }
 .nursery-shell button:focus-visible { outline: 3px solid #05a64b; outline-offset: 3px; }
 
-/* Estética corporativa de Almacén, distribución del plano del vivero. */
-.nursery-home { max-width: none; padding: 16px 22px 24px; }
-.nursery-hero { grid-template-columns: 1.35fr 1fr; gap: 18px; padding-bottom: 0; border: 0; align-items: stretch; }
-.nursery-hero > div { padding: 26px 30px; border-radius: 18px; background: linear-gradient(110deg, #155b3d, #144619); display: flex; flex-direction: column; justify-content: center; }
-.nursery-hero > div .eyebrow { color: #d3ead2; }
-.nursery-hero h1, .nursery-hero h1 em { color: #fff; font-family: inherit; font-style: normal; font-weight: 750; font-size: clamp(1.6rem, 2.5vw, 2.6rem); letter-spacing: -.025em; line-height: 1.2; }
-.nursery-hero > div > p:last-child { color: #e1efe3; font-size: .88rem; margin-bottom: 0; }
-.nursery-home .nursery-total { background: #fff; border-top: 1px solid #c8dcc9; border-left: 4px solid #05a64b; border-radius: 14px; padding: 20px 24px; gap: 5px; }
-.nursery-total > strong { color: #123f23; font-size: clamp(2.3rem, 3vw, 3.6rem); font-weight: 750; }
-.nursery-total > span { font-weight: 800; color: #5a6e62; }
-.nursery-home-grid { padding-top: 20px; gap: 20px; grid-template-columns: 1.1fr 1fr; }
-.nursery-story { display: grid; gap: 18px; align-content: start; }
-.nursery-intro, .nursery-process, .nursery-team { background: #fff; border: 1px solid #c8dcc9; border-radius: 14px; padding: 22px; margin: 0; }
-.nursery-home .nursery-intro h2, .nursery-home .nursery-process h2, .nursery-home .nursery-team h2 { font-family: inherit; font-weight: 750; font-size: 1.3rem; line-height: 1.35; margin: 8px 0 14px; }
-.nursery-intro > p:last-child { margin-bottom: 0; font-size: .9rem; }
-.nursery-process ol { margin: 18px 0 0; }
-.nursery-process li { background: #f3faf4; border-top: 3px solid #087b3b; }
-.nursery-process li:last-child { background: #16532c; }
-.nursery-process li:last-child > span { color: #d3ead2; }
-.nursery-photo { background: #e1efe3; border: 1px dashed #8bab91; }
-.nursery-photo strong { font-family: inherit; font-weight: 700; font-size: 1.45rem; }
-.nursery-photo--2 { background: #e7f4e4; }
-.nursery-photo--3 strong { font-size: 1.1rem; }
+/* Identidad natural del vivero: superficies abiertas y tipografía botánica. */
+.nursery-shell { background: #f5f6ef; color: #234332; }
+.nursery-home { max-width: 1600px; padding: 32px clamp(22px, 3vw, 48px) 24px; }
+.nursery-hero { grid-template-columns: 1.35fr 1fr; gap: 38px; padding: 12px 0 32px; border-bottom: 1px solid #d1dbcc; align-items: center; }
+.nursery-hero > div { padding: 0; border-radius: 0; background: transparent; }
+.nursery-hero > div .eyebrow { color: #526c4d; }
+.nursery-hero h1, .nursery-hero h1 em { color: #16472e; font-family: Georgia, "Times New Roman", serif; font-style: normal; font-weight: 400; font-size: clamp(2.2rem, 3.8vw, 4rem); letter-spacing: -.035em; line-height: 1.13; }
+.nursery-hero h1 em { color: #527448; font-style: italic; }
+.nursery-hero > div > p:last-child { color: #5a6e62; font-size: .92rem; margin-bottom: 0; }
+.nursery-home .nursery-total { background: transparent; border: 0; border-left: 1px solid #bdcdb7; border-radius: 0; box-shadow: none; padding: 12px 0 12px 34px; gap: 6px; }
+.nursery-total > strong { color: #16472e; font-family: inherit; font-size: clamp(2.5rem, 3.6vw, 4rem); font-weight: 600; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.nursery-total > span { font-size: .65rem; font-weight: 700; color: #5a6e62; }
+.nursery-home-grid { padding-top: 32px; gap: 38px; grid-template-columns: 1.1fr 1fr; }
+.nursery-story { display: grid; gap: 30px; align-content: start; }
+.nursery-intro, .nursery-process, .nursery-team { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; margin: 0; }
+.nursery-process, .nursery-team { padding-top: 26px; border-top: 1px solid #d1dbcc; }
+.nursery-home .nursery-intro h2, .nursery-home .nursery-process h2, .nursery-home .nursery-team h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: clamp(1.6rem, 2vw, 2.2rem); line-height: 1.25; margin: 12px 0 16px; letter-spacing: -.02em; }
+.nursery-home .nursery-intro h2 { font-style: italic; }
+.nursery-intro > p:last-child { margin-bottom: 0; font-size: .93rem; line-height: 1.85; }
+.nursery-process ol { margin: 20px 0 0; gap: 18px 14px; }
+.nursery-process li { background: transparent; border: 0; border-bottom: 1px solid #b9ccb0; border-radius: 0; padding: 8px 4px 16px; }
+.nursery-process li > span { color: #526c4d; }
+.nursery-process li:last-child { background: transparent; color: #16472e; border-bottom: 2px solid #087b3b; }
+.nursery-process li:last-child > span { color: #526c4d; }
+.nursery-photo { background: #e5ebde; border: 0; border-radius: 2px; box-shadow: none; padding: 24px; }
+.nursery-photo > span { color: #78936d; font-size: 3.5rem; }
+.nursery-photo strong { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-style: italic; font-size: 1.8rem; }
+.nursery-photo--2 { background: #dce7d6; }
+.nursery-photo--3 strong { font-size: 1.3rem; }
+.nursery-home .button--secondary { background: transparent; border: 0; border-bottom: 1px solid #64865b; border-radius: 0; box-shadow: none; padding: 8px 0; color: #225635; }
+.nursery-home .button--secondary:hover:not(:disabled) { background: #e5ebde; }
+.nursery-sidebar { box-shadow: none; background: #184b2b; }
+.nursery-nav-item, .nursery-session, .nursery-toggle, .nursery-logout { border-radius: 3px; box-shadow: none; }
+.nursery-nav-item--active { box-shadow: none; background: rgb(255 255 255 / 9%); border-left-color: #92b979; }
+.nursery-session { background: transparent; border-top: 1px solid rgb(255 255 255 / 18%); }
+.nursery-home-footer { border-color: #d1dbcc; }
 .nursery-sidebar { position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; min-height: 100dvh; }
-.nursery-toggle { position: fixed; left: 222px; top: 12px; width: 28px; height: 30px; padding: 0; z-index: 5; color: #123f23; background: #fff; border-color: #c8dcc9; box-shadow: 0 3px 10px rgb(18 63 35 / 12%); }
+.nursery-toggle { position: fixed; left: 222px; top: 12px; width: 28px; height: 30px; padding: 0; z-index: 5; color: #123f23; background: #fff; border-color: #c8dcc9; box-shadow: none; }
 .nursery-shell--collapsed .nursery-toggle { left: 58px; }
 .nursery-shell { transition: padding-left .2s ease; }
 .nursery-sidebar { transition: width .2s ease; }
-@media (max-width: 760px) { .nursery-sidebar, .nursery-shell--collapsed .nursery-sidebar { position: static; min-height: auto; flex-direction: row; } .nursery-toggle, .nursery-shell--collapsed .nursery-toggle { position: static; width: 36px; height: 36px; } .nursery-home { padding: 16px 12px; } .nursery-hero, .nursery-home-grid { grid-template-columns: 1fr; } .nursery-hero > div { padding: 24px; } }
+@media (max-width: 760px) { .nursery-sidebar, .nursery-shell--collapsed .nursery-sidebar { position: static; min-height: auto; flex-direction: row; } .nursery-toggle, .nursery-shell--collapsed .nursery-toggle { position: static; width: 36px; height: 36px; } .nursery-home { padding: 16px 12px; } .nursery-hero, .nursery-home-grid { grid-template-columns: 1fr; } .nursery-hero > div { padding: 8px 0; } .nursery-home .nursery-total { border-left: 0; border-top: 1px solid #d1dbcc; padding: 20px 0 0; } }
 @media (prefers-reduced-motion: reduce) { .nursery-shell, .nursery-sidebar { transition: none; } }
