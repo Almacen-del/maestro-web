@@ -382,6 +382,7 @@ export interface ManageableCatalogInventory {
   readonly actorDisplayName: string;
   readonly updatedAt: string;
   readonly initialSourceReference?: string;
+  readonly initialDeadPlants?: number;
 }
 
 export interface ManageableCatalogData {

@@ -562,6 +562,8 @@ function parseCatalogLine(value: unknown): ManageableCatalogLine {
       !Number.isSafeInteger(value.version) || typeof value.origen !== "string" ||
       typeof value.actorUsuarioId !== "string" || typeof value.actorNombreVisible !== "string" ||
       typeof value.actualizadoEn !== "string" ||
+      (value.plantasMuertasIniciales !== undefined &&
+        (!Number.isSafeInteger(value.plantasMuertasIniciales) || (value.plantasMuertasIniciales as number) < 0)) ||
       (value.referenciaFuenteInicial !== null && typeof value.referenciaFuenteInicial !== "string")
     ) throw new Error("El inventario de la linea no es valido.");
     inventory = {
@@ -570,6 +572,8 @@ function parseCatalogLine(value: unknown): ManageableCatalogLine {
       version: value.version as number, origin: value.origen,
       actorUserId: value.actorUsuarioId, actorDisplayName: value.actorNombreVisible,
       updatedAt: value.actualizadoEn,
+      ...(value.plantasMuertasIniciales === undefined ? {} :
+        {initialDeadPlants: value.plantasMuertasIniciales as number}),
       ...(typeof value.referenciaFuenteInicial === "string"
         ? {initialSourceReference: value.referenciaFuenteInicial}
         : {}),

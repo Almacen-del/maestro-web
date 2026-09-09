@@ -74,7 +74,25 @@ describe("ModuleMapSection", () => {
     await screen.findByText("1 pendientes");
     fireEvent.click(screen.getByRole("button", {name: "Módulo 1 · Cama 1 · Línea 37: Pendiente"}));
     expect(screen.getAllByText("Sin dato")).toHaveLength(5);
-    expect(screen.getByText("No registrado")).toBeInTheDocument();
+    expect(screen.getAllByText("No registrado")).toHaveLength(2);
     expect(screen.getByText("Sin información")).toBeInTheDocument();
+  });
+
+  it("muestra Germinador 3 y muertas iniciales sin convertir una línea vacía en realizada", async () => {
+    const repo = repository();
+    const catalog = await repo.listManageableCatalog();
+    const first = catalog.lines[0]!;
+    repo.listManageableCatalog = async () => ({
+      locations: catalog.locations.map((item) => item.id === "modulo"
+        ? {...item, type: "GERMINADOR", displayName: "Germinador 3"} : item),
+      lines: [{...first, inventory: {...first.inventory!, females: 0, males: 0, rootstocks: 0,
+        total: 0, initialDeadPlants: 7}}],
+    });
+    render(<ModuleMapSection repository={repo} loading={false} />);
+    expect(await screen.findByRole("option", {name: "Germinador 3 · 1 líneas"})).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", {name: /: Vacía$/}));
+    expect(screen.getByText("0 realizadas")).toBeInTheDocument();
+    expect(screen.getByText("Muertas del inventario inicial")).toBeInTheDocument();
+    expect(screen.getByText("7")).toBeInTheDocument();
   });
 });
