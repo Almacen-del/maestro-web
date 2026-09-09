@@ -400,6 +400,7 @@ export interface ProductionLotInventorySummary {
 }
 
 export interface ProductionLotSummary {
+  readonly lotType?: "SIEMBRA" | "INJERTACION";
   readonly id: string;
   readonly displayName: string;
   readonly sowingDate: string;
@@ -593,6 +594,7 @@ export interface MonitorRepository {
     species: string | undefined,
     variety: string | undefined,
     idempotencyKey: string,
+    lotType?: "SIEMBRA" | "INJERTACION",
   ): Promise<ProductionLotSummary>;
   updateProductionLotLines(
     lotId: string,

@@ -48,7 +48,7 @@ export function DashboardSection({repository}: DashboardSectionProps) {
     setError(undefined);
     try {
       await Promise.all([
-        repository.listManageableCatalog(reuse).then(setCatalog), repository.listManageableLots(reuse).then(setLots),
+        repository.listManageableCatalog(reuse).then(setCatalog), repository.listManageableLots(reuse).then((values) => setLots(values.filter((lot) => (lot.lotType ?? "SIEMBRA") === "SIEMBRA"))),
       ]);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No fue posible cargar el resumen administrativo.");

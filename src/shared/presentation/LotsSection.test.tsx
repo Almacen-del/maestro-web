@@ -22,6 +22,19 @@ function repository(): MonitorRepository {
 }
 
 describe("LotsSection", () => {
+  it("usa botones por fecha y muestra Sin injertación sin desplegable", async () => {
+    render(<LotsSection repository={repository()} />);
+    await screen.findByRole("checkbox");
+    expect(screen.getByLabelText("Mes y año de siembra")).toHaveAttribute("type", "month");
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", {name: "Por injertación"}));
+    expect(screen.getByRole("button", {name: "Por injertación"})).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("Mes y año de injertación")).toHaveAttribute("type", "month");
+    fireEvent.click(screen.getByRole("button", {name: /Sin injertación/}));
+    expect(screen.getByRole("heading", {name: "Sin injertación"})).toBeInTheDocument();
+    expect(screen.getByText(/Línea 1 · Sin inventario/)).toBeInTheDocument();
+  });
+
   it("asigna una línea al lote seleccionado", async () => {
     const repo = repository();
     render(<LotsSection repository={repo} />);

@@ -605,6 +605,7 @@ function parseProductionLot(value: unknown): ProductionLotSummary {
   if (
     typeof lot.loteId !== "string" || typeof lot.nombreVisible !== "string" ||
     typeof lot.fechaSiembra !== "string" ||
+    (lot.tipoLote !== undefined && lot.tipoLote !== "SIEMBRA" && lot.tipoLote !== "INJERTACION") ||
     (lot.especie !== null && typeof lot.especie !== "string") ||
     (lot.variedad !== null && typeof lot.variedad !== "string") ||
     (lot.estado !== "ACTIVO" && lot.estado !== "FINALIZADO") ||
@@ -621,7 +622,8 @@ function parseProductionLot(value: unknown): ProductionLotSummary {
   return {
     id: lot.loteId,
     displayName: lot.nombreVisible,
-    sowingDate: lot.fechaSiembra,
+    sowingDate: lot.fechaSiembra.slice(0, 7),
+    lotType: lot.tipoLote === "INJERTACION" ? "INJERTACION" : "SIEMBRA",
     ...(typeof lot.especie === "string" ? {species: lot.especie} : {}),
     ...(typeof lot.variedad === "string" ? {variety: lot.variedad} : {}),
     state: lot.estado,
@@ -1137,11 +1139,11 @@ export class FirebaseMonitorRepository implements MonitorRepository {
 
   async createProductionLot(
     displayName: string, sowingDate: string, species: string | undefined,
-    variety: string | undefined, idempotencyKey: string,
+    variety: string | undefined, idempotencyKey: string, lotType: "SIEMBRA" | "INJERTACION" = "SIEMBRA",
   ): Promise<ProductionLotSummary> {
     const callable = httpsCallable(this.functions, "crearLoteProductivo");
     const response = await callable({
-      nombreVisible: displayName, fechaSiembra: sowingDate,
+      nombreVisible: displayName, fechaSiembra: sowingDate, tipoLote: lotType,
       especie: species ?? null, variedad: variety ?? null, claveIdempotencia: idempotencyKey,
     }).finally(() => this.readCache.clear());
     return parseProductionLot(response.data);
