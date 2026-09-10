@@ -16,13 +16,13 @@ it("muestra existencias reales, proceso y espacios de fotos sin consultar otros 
   expect(screen.getByText("Plantas de cacay")).toBeInTheDocument();
   expect(screen.getAllByText(/Espacio reservado para una fotografía real/)).toHaveLength(1);
   const photos = screen.getAllByRole("img");
-  expect(photos).toHaveLength(2);
-  expect(photos[0]).toHaveAttribute("viewBox", "1080 280 890 445");
-  expect(photos[1]).toHaveAttribute("viewBox", "30 100 460 590");
-  for (const photo of photos) {
-    expect(photo.querySelector("image")).toHaveAttribute("href", "/vivero-panorama-septiembre.png");
-    expect(photo).toHaveAttribute("preserveAspectRatio", "xMidYMid meet");
-  }
+  expect(photos).toHaveLength(1);
+  expect(photos[0]).toHaveAttribute("src", "/vivero-panorama-septiembre.png");
+  const sections = photos[0].closest(".nursery-story")!.children;
+  expect(sections[0]).toHaveClass("nursery-intro");
+  expect(sections[1]).toHaveClass("nursery-panorama");
+  expect(sections[2]).toHaveClass("nursery-process");
+  expect(sections[3]).toHaveClass("nursery-team");
   expect(repository.listManageableLots).not.toHaveBeenCalled();
 });
 
