@@ -784,3 +784,49 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
 .nursery-home .nursery-total { background: #dfe8d6; border: 0; border-radius: 4px; padding: clamp(24px, 3vw, 40px); box-shadow: none; justify-content: center; }
 .nursery-total > strong, .nursery-total h2 { color: #204d38; }
 .nursery-total > span, .nursery-total small { color: #455d43; }
+
+.nursery-hero > div {
+  background-color: #204d38;
+  background-image: linear-gradient(90deg, rgb(9 42 24 / 78%), rgb(9 42 24 / 50%)), url("/banner-follaje-arles.png");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Acceso y restauración coherentes con la identidad del vivero. */
+.nursery-session-loading { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; background: #f7f6f0; color: #455d43; }
+.nursery-session-loading img { width: 64px; height: 70px; object-fit: contain; }
+.nursery-session-loading h1 { font: italic 2.5rem/1.15 Georgia, serif; color: #204d38; }
+.nursery-session-loading p { margin: 0; }
+.nursery-access-brand { padding: 18px 24px; background: #f7f6f0; color: #204d38; border-bottom: 1px solid #d1dbcc; }
+.nursery-access-brand > div { display: flex; align-items: center; gap: 12px; }
+.nursery-access-brand img { width: 42px; height: 46px; object-fit: contain; }
+.nursery-access-brand strong, .nursery-access-brand small { display: block; }
+.nursery-access-brand strong { font: 1.4rem Georgia, serif; }
+
+/* Vista de escritorio compacta sin recortar contenido ni bloquear el scroll. */
+@media (min-width: 1000px) {
+  .nursery-home { padding: 16px 26px; }
+  .nursery-hero { padding: 0 0 16px; gap: 18px; }
+  .nursery-hero > div, .nursery-home .nursery-total { padding: 16px 24px; }
+  .nursery-hero h1, .nursery-hero h1 em { font-size: clamp(1.9rem, 2.5vw, 2.8rem); line-height: 1.08; }
+  .nursery-hero > div > p:last-child { margin-top: 10px; font-size: .85rem; }
+  .nursery-total > strong { font-size: 2.6rem; line-height: 1; }
+  .nursery-total .button { margin-top: 2px; padding: 4px 0; }
+  .nursery-home-grid { padding-top: 16px; gap: 28px; }
+  .nursery-story { gap: 16px; }
+  .nursery-process, .nursery-team { padding-top: 14px; }
+  .nursery-home .nursery-intro h2, .nursery-home .nursery-process h2, .nursery-home .nursery-team h2 { font-size: 1.6rem; margin: 6px 0 10px; }
+  .nursery-intro h2 br { display: none; }
+  .nursery-intro > p:last-child { font-size: .87rem; line-height: 1.6; }
+  .nursery-process ol { margin-top: 12px; gap: 10px; }
+  .nursery-process li { padding: 4px 4px 9px; gap: 6px; }
+  .nursery-team { grid-template-columns: 1fr 1fr; }
+  .nursery-team ul { margin: 8px 0 0; line-height: 1.7; }
+  .nursery-photo { min-height: 170px; padding: 18px; }
+  .nursery-photo--3 { min-height: 130px; padding: 12px; }
+  .nursery-photo--3 > span { font-size: 1.7rem; }
+  .nursery-photo figcaption { gap: 6px; }
+  .nursery-photo p { font-size: .7rem; }
+  .nursery-gallery { gap: 16px; }
+  .nursery-home-footer { margin-top: 16px; padding-top: 12px; }
+}

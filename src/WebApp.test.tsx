@@ -28,6 +28,15 @@ function repository(user = admin): MonitorRepository {
 afterEach(() => vi.restoreAllMocks());
 
 describe("Vivero Maestro Web", () => {
+  it("restaura con la identidad natural sin cabecera antigua ni acceso prematuro", () => {
+    const repo = Object.assign(repository(), {restoreSession: vi.fn(() => new Promise<MonitorUser | undefined>(() => {}))});
+    const {container} = render(<WebApp repository={repo} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Restaurando sesión");
+    expect(screen.getByAltText("Arles")).toBeInTheDocument();
+    expect(container.querySelector(".topbar, .environment-banner")).toBeNull();
+    expect(screen.queryByRole("button", {name: "Menú principal"})).not.toBeInTheDocument();
+    expect(repo.listManageableCatalog).not.toHaveBeenCalled();
+  });
   it("restaura la sesión al volver a montar la página sin pedir contraseña", async () => {
     const repo = Object.assign(repository(), {restoreSession: vi.fn().mockResolvedValue(admin)});
     const first = render(<WebApp repository={repo} />);

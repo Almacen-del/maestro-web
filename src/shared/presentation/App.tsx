@@ -478,9 +478,9 @@ export function App({repository, reportPlatform}: AppProps) {
 
   return (
     <main className={user ? `app-shell nursery-shell${sidebarCollapsed ? " nursery-shell--collapsed" : ""}` : "app-shell"}>
-      {!user && <header className="topbar">
+      {!user && !restoringSession && <header className="nursery-access-brand">
         <div>
-          <span className="brand-mark" aria-hidden="true">VC</span>
+          <img src="/logo-arles.jpeg" alt="Arles" />
           <div>
             <strong>Vivero Maestro</strong>
             <small>Propagación de material vegetal</small>
@@ -488,12 +488,12 @@ export function App({repository, reportPlatform}: AppProps) {
         </div>
       </header>}
 
-      {(!user || !production) && <div className={environmentClass}>
+      {!restoringSession && !production && <div className={environmentClass}>
         {environmentLabel}
       </div>}
       {user && <NurserySidebar user={user} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((value) => !value)} onHome={() => setActiveSection("DASHBOARD")} onSignOut={() => void handleSignOut()} />}
 
-      {restoringSession ? <p role="status">Restaurando sesión…</p> : !user ? (
+      {restoringSession ? <section className="nursery-session-loading" role="status" aria-live="polite"><img src="/logo-arles.jpeg" alt="Arles" /><h1>Vivero</h1><p>Restaurando sesión…</p></section> : !user ? (
         <section className="login-panel" aria-labelledby="login-title">
           <p className="eyebrow">ETAPA 20</p>
           <h1 id="login-title">Acceso a revisión</h1>
