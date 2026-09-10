@@ -6,7 +6,9 @@ const stages = ["Germinación", "Trasplante", "Patrón", "Búsqueda de yema", "I
 function PhotoSpace({number, label}: {readonly number: number; readonly label: string}) {
   if (number === 1 || number === 2) {
     const description = number === 1 ? "Vista aérea ilustrada del vivero: seis estructuras y cultivos" : "Vista aérea ilustrada del vivero: dos estructuras grandes";
-    return <figure className={`nursery-photo nursery-photo--${number} nursery-photo--illustrated`}><img src={`/vivero-vista-${number}.png`} alt={description} width={number === 1 ? 1672 : 1649} height={number === 1 ? 941 : 954} loading="lazy" decoding="async" /><figcaption><strong>{label}</strong><small>VISTA {number} · ACABADO ILUSTRADO</small></figcaption></figure>;
+    const crop = number === 1 ? "1080 280 890 445" : "30 100 460 590";
+    const [x, y, width, height] = crop.split(" ").map(Number);
+    return <figure className={`nursery-photo nursery-photo--${number} nursery-photo--illustrated`}><svg role="img" aria-label={description} viewBox={crop} preserveAspectRatio="xMidYMid meet" style={{aspectRatio: `${width} / ${height}`}}><defs><clipPath id={`nursery-crop-${number}`}><rect x={x} y={y} width={width} height={height} /></clipPath></defs><image href="/vivero-panorama-septiembre.png" width="2022" height="778" clipPath={`url(#nursery-crop-${number})`} /></svg><figcaption><strong>{label}</strong><small>VISTA {number} · ACABADO ILUSTRADO</small></figcaption></figure>;
   }
   return <figure className={`nursery-photo nursery-photo--${number}`}><span aria-hidden="true">✳</span><figcaption><small>FOTOGRAFÍA {number} · POR INCORPORAR</small><strong>{label}</strong><p>Espacio reservado para una fotografía real del vivero.</p></figcaption></figure>;
 }

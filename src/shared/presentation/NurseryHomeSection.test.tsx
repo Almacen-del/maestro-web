@@ -17,9 +17,12 @@ it("muestra existencias reales, proceso y espacios de fotos sin consultar otros 
   expect(screen.getAllByText(/Espacio reservado para una fotografía real/)).toHaveLength(1);
   const photos = screen.getAllByRole("img");
   expect(photos).toHaveLength(2);
-  expect(photos[0]).toHaveAttribute("src", "/vivero-vista-1.png");
-  expect(photos[1]).toHaveAttribute("src", "/vivero-vista-2.png");
-  expect(photos[0]).toHaveAttribute("loading", "lazy");
+  expect(photos[0]).toHaveAttribute("viewBox", "1080 280 890 445");
+  expect(photos[1]).toHaveAttribute("viewBox", "30 100 460 590");
+  for (const photo of photos) {
+    expect(photo.querySelector("image")).toHaveAttribute("href", "/vivero-panorama-septiembre.png");
+    expect(photo).toHaveAttribute("preserveAspectRatio", "xMidYMid meet");
+  }
   expect(repository.listManageableLots).not.toHaveBeenCalled();
 });
 
