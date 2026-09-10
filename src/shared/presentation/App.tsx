@@ -13,6 +13,7 @@ import {CatalogSection} from "./CatalogSection";
 import {AdministrationSection, type AdministrationDestination} from "./AdministrationSection";
 import {NurserySidebar} from "./NurserySidebar";
 import {NurseryHomeSection} from "./NurseryHomeSection";
+import {DailyProcessesSection} from "./DailyProcessesSection";
 import {CountStatisticsSection} from "./CountStatisticsSection";
 import {DraftJourneysSection} from "./DraftJourneysSection";
 import {InventoryReportsSection} from "./InventoryReportsSection";
@@ -81,6 +82,7 @@ export function App({repository, reportPlatform}: AppProps) {
   const [user, setUser] = useState<MonitorUser>();
   const [restoringSession, setRestoringSession] = useState(Boolean(repository.restoreSession));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [dailyActive, setDailyActive] = useState(false);
   const [activeSection, setActiveSection] = useState<
     "DASHBOARD" | "MONITOR" | "STATISTICS" | "MAP" | "INVENTORY" | "ADMIN" | "LOTS" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
   >("DASHBOARD");
@@ -491,7 +493,7 @@ export function App({repository, reportPlatform}: AppProps) {
       {!restoringSession && !production && <div className={environmentClass}>
         {environmentLabel}
       </div>}
-      {user && <NurserySidebar user={user} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((value) => !value)} onHome={() => setActiveSection("DASHBOARD")} onSignOut={() => void handleSignOut()} />}
+      {user && <NurserySidebar user={user} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((value) => !value)} onHome={() => { setDailyActive(false); setActiveSection("DASHBOARD"); }} onDaily={() => setDailyActive(true)} dailyActive={dailyActive} onSignOut={() => void handleSignOut()} />}
 
       {restoringSession ? <section className="nursery-session-loading" role="status" aria-live="polite"><img src="/logo-arles.jpeg" alt="Arles" /><h1>Vivero</h1><p>Restaurando sesión…</p></section> : !user ? (
         <section className="login-panel" aria-labelledby="login-title">
@@ -520,7 +522,7 @@ export function App({repository, reportPlatform}: AppProps) {
       ) : !user.canManageCatalog ? (
         <section className="nursery-home"><h1>Secciones en preparación</h1><p>El acceso a las demás secciones está temporalmente desactivado.</p></section>
       ) : user.canManageCatalog ? (
-        <NurseryHomeSection repository={repository} />
+        dailyActive ? <DailyProcessesSection /> : <NurseryHomeSection repository={repository} />
       ) : activeSection === "DISCARDS" && user.canReview ? (
         <DiscardsSection repository={repository} user={user} />
       ) : activeSection === "USERS" && user.canManageUsers ? (
