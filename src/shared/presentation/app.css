@@ -798,6 +798,37 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
 .nursery-photo--illustrated figcaption strong { font-size: 1.15rem; }
 .nursery-photo--illustrated figcaption small { font-size: .57rem; }
 
+/* La galería usa el alto disponible, no el ancho natural de las imágenes. */
+@media (min-width: 1100px) and (min-height: 680px) {
+  .nursery-shell .nursery-home {
+    height: 100dvh;
+    padding: 12px 24px;
+    display: grid;
+    grid-template-rows: auto minmax(min-content, 1fr) auto;
+    gap: 12px;
+  }
+  .nursery-shell .nursery-hero { padding-bottom: 12px; }
+  .nursery-shell .nursery-hero > div, .nursery-shell .nursery-total { padding: 12px 20px; }
+  .nursery-shell .nursery-hero h1, .nursery-shell .nursery-hero h1 em { font-size: clamp(1.8rem, 3.5dvh, 2.5rem); }
+  .nursery-shell .nursery-total > strong { font-size: 2.3rem; }
+  .nursery-shell .nursery-home-grid { min-height: 0; padding-top: 0; gap: 24px; }
+  .nursery-shell .nursery-story { gap: 12px; }
+  .nursery-shell .nursery-process, .nursery-shell .nursery-team { padding-top: 10px; }
+  .nursery-shell .nursery-story h2 { font-size: 1.35rem; margin: 5px 0 8px; }
+  .nursery-shell .nursery-intro > p:last-child { line-height: 1.5; }
+  .nursery-shell .nursery-process ol { margin-top: 8px; gap: 8px; }
+  .nursery-shell .nursery-team { align-items: start; }
+  .nursery-shell .nursery-photo--3 { min-height: 110px; }
+  .nursery-shell .nursery-gallery { min-height: 0; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .nursery-shell .nursery-gallery .nursery-photo--illustrated { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+  .nursery-shell .nursery-photo--illustrated img { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+  .nursery-shell .nursery-photo--illustrated figcaption { padding-top: 5px; }
+  .nursery-shell .nursery-home-footer { margin-top: 0; padding-top: 8px; }
+  /* Los errores se añaden al flujo normal sin tapar ni recortar información. */
+  .nursery-shell .nursery-home:has(> .alert) { height: auto; min-height: 100dvh; display: block; }
+  .nursery-shell .nursery-home:has(> .alert) .nursery-photo--illustrated img { height: auto; }
+}
+
 /* Acceso y restauración coherentes con la identidad del vivero. */
 .nursery-session-loading { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; background: #f7f6f0; color: #455d43; }
 .nursery-session-loading img { width: 64px; height: 70px; object-fit: contain; }
