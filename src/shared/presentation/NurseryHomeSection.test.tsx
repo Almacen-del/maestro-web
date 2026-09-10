@@ -14,6 +14,10 @@ it("muestra existencias reales, proceso y espacios de fotos sin consultar otros 
   expect(screen.getByText("1 líneas sin inventario registrado")).toBeInTheDocument();
   expect(screen.getByText("Germinación")).toBeInTheDocument();
   expect(screen.getByText("Plantas de cacay")).toBeInTheDocument();
+  expect(screen.getByRole("heading", {name: "Cultivamos prosperidad."})).toBeInTheDocument();
+  expect(screen.getByRole("heading", {name: "Nuestro proceso"})).toBeInTheDocument();
+  expect(screen.queryByText(/La vida empieza|LO QUE HACEMOS|Paso a paso/)).not.toBeInTheDocument();
+  expect(document.querySelectorAll(".nursery-stage-art")).toHaveLength(6);
   expect(screen.getAllByText(/Espacio reservado para una fotografía real/)).toHaveLength(1);
   const photos = screen.getAllByRole("img");
   expect(photos).toHaveLength(1);

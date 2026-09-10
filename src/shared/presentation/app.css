@@ -843,6 +843,22 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
   .nursery-home-grid--panorama .nursery-photo--3 p { margin: 4px 0 0; }
 }
 
+.nursery-home-grid--panorama .nursery-intro { text-align: center; }
+.nursery-home-grid--panorama .nursery-intro > p { max-width: 1000px; margin-inline: auto; }
+.nursery-home-grid--panorama .nursery-process h2 { text-align: center; }
+.nursery-home-grid--panorama .nursery-process .nursery-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 10px 8px; border: 1px solid rgb(37 75 39 / 10%); border-radius: 12px; color: #23492f; background: #e2edcc; box-shadow: 0 3px 7px rgb(40 65 30 / 5%); }
+.nursery-home-grid--panorama .nursery-process .nursery-stage--1 { background: #d5e8d4; }
+.nursery-home-grid--panorama .nursery-process .nursery-stage--2 { background: #c9dcc0; }
+.nursery-home-grid--panorama .nursery-process .nursery-stage--3 { background: #ece8c4; }
+.nursery-home-grid--panorama .nursery-process .nursery-stage--4 { background: #e8d9bc; }
+.nursery-home-grid--panorama .nursery-process .nursery-stage--5 { background: #bbd4ad; }
+.nursery-stage-art { width: 42px; height: 42px; flex-shrink: 0; }
+.nursery-stage strong { text-align: center; }
+@media (min-width: 1100px) and (min-height: 680px) {
+  .nursery-home-grid--panorama .nursery-process .nursery-stage { flex-direction: row; padding: 6px; gap: 6px; }
+  .nursery-stage-art { width: 34px; height: 34px; }
+}
+
 /* Acceso y restauración coherentes con la identidad del vivero. */
 .nursery-session-loading { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; background: #f7f6f0; color: #455d43; }
 .nursery-session-loading img { width: 64px; height: 70px; object-fit: contain; }
