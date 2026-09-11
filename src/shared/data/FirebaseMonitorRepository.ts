@@ -813,6 +813,19 @@ function parseMigrationReversalResult(value: unknown): MigrationReversalResult {
 }
 
 export class FirebaseMonitorRepository implements MonitorRepository {
+  async listDailyActivities(date: string) {
+    if (this.environment !== "EMULATOR") throw new Error("Conexión productiva pendiente");
+    const {parseAndroidDaily, dailyActivityFromAndroid} = await import("../domain/DailyActivityContract");
+    const response = await httpsCallable<{date: string}, unknown>(this.functions, "listarProcesosDiariosMovil")({date});
+    const data = response.data as {records?: unknown};
+    if (!data || !Array.isArray(data.records)) throw new Error("Respuesta diaria inválida");
+    return data.records.map((value: unknown) => {
+      if (!value || typeof value !== "object") throw new Error("Registro diario inválido");
+      const record = value as {draft: unknown; recordedByName?: unknown};
+      if (typeof record.recordedByName !== "string") throw new Error("Responsable inválido");
+      return {...dailyActivityFromAndroid(parseAndroidDaily(record.draft)), recordedByName: record.recordedByName};
+    });
+  }
   private readonly readCache = new SessionReadCache();
   readonly emulatorEnabled: boolean;
 

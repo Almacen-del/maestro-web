@@ -524,6 +524,7 @@ export interface MigrationReversalResult {
 export type MonitorUnsubscribe = () => void;
 
 export interface MonitorRepository {
+  listDailyActivities?(date: string): Promise<readonly import("./DailyActivityContract").DailyActivity[]>;
   readonly environment: "EMULATOR" | "PRODUCTION" | "DISABLED";
   readonly emulatorEnabled: boolean;
   signIn(email: string, password: string): Promise<MonitorUser>;
