@@ -1,0 +1,44 @@
+.monitoring-section {max-width:1500px;margin:auto;padding:28px;color:#204d38}
+.monitoring-heading {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
+.monitoring-heading h1 {font:500 2.3rem/1.15 Georgia,serif;margin:8px 0}
+.monitoring-heading p {margin:6px 0}
+.monitoring-mode {background:#e5ecd9;padding:8px 12px;border-radius:14px;font-size:.8rem}
+.monitoring-filters {display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin:20px 0}
+.monitoring-filters label {display:grid;gap:7px;flex:1 1 180px;font-size:.82rem;font-weight:600}
+.monitoring-section input,.monitoring-section select {background:#fff;color:#204d38;border:1px solid #c9d7c4;border-radius:5px;padding:10px;min-height:42px;font:inherit;min-width:0}
+.monitoring-record-picker {display:grid;gap:8px;margin:18px 0;font-size:.85rem}
+.monitoring-record-picker select {width:100%}
+.monitoring-notice {padding:18px 20px;background:#edf0e2;border-left:3px solid #9aac74;line-height:1.6}
+.monitoring-owner {display:flex;flex-wrap:wrap;gap:24px;margin:20px 0}
+.monitoring-summary {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}
+.monitoring-count {padding:18px;border-top:3px solid #a3ac9b;background:#eaece5;display:grid;gap:10px;border-radius:5px}
+.monitoring-count strong {font-size:1.8rem}
+.monitoring-count--PASS {background:#e2eedf;border-color:#54904c}
+.monitoring-count--FAIL {background:#f4e4dc;border-color:#b45e44}
+.monitoring-count--NOT_APPLICABLE {background:#e4edf0;border-color:#60868c}
+.monitoring-groups {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.monitoring-group {border:1px solid #d5decd;border-radius:6px;background:#fff;overflow:hidden}
+.monitoring-group summary {cursor:pointer;display:flex;align-items:center;gap:12px;padding:16px 18px;background:#ecf0e3;list-style:none}
+.monitoring-group summary span {margin-left:auto;font-size:.75rem;color:#53674d}
+.monitoring-group summary:after {content:'+'}
+.monitoring-group[open] summary:after {content:'−'}
+.monitoring-group-content {padding:0 18px 16px}
+.monitoring-fields {display:flex;flex-wrap:wrap;gap:16px;padding:10px;background:#fafaf4}
+.monitoring-fields dt {font-size:.78rem;color:#65735e}
+.monitoring-fields dd {margin:6px 0 0}
+.monitoring-criteria {padding:0;margin:0;list-style:none}
+.monitoring-criteria li {padding:14px 0;border-bottom:1px solid #e7ebdf}
+.monitoring-criterion-heading {display:flex;align-items:start;gap:12px;justify-content:space-between;font-size:.88rem;line-height:1.5}
+.monitoring-result {flex-shrink:0;background:#eceee8;color:#58624e;border-radius:10px;padding:3px 8px;font-size:.74rem}
+.monitoring-result--PASS {background:#e0efdb;color:#2c6228}
+.monitoring-result--FAIL {background:#f9e2db;color:#923b27}
+.monitoring-result--NOT_APPLICABLE {background:#e3eff1;color:#35636e}
+.monitoring-treatment,.monitoring-remark {font-size:.82rem;line-height:1.5;margin-bottom:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.monitoring-treatment {color:#923b27}
+.monitoring-group-observations {margin-top:16px;font-size:.82rem}
+.monitoring-group-observations p {white-space:pre-wrap;overflow-wrap:anywhere;color:#5d6b55;line-height:1.5}
+.monitoring-footer {display:grid;grid-template-columns:1fr 2fr;gap:24px;padding:22px;margin-top:24px;background:#e7ecdf;line-height:1.5}
+.monitoring-footer p {white-space:pre-wrap;overflow-wrap:anywhere}
+.monitoring-footer small {color:#5d6b55}
+@media(max-width:1000px){.monitoring-groups{grid-template-columns:1fr}}
+@media(max-width:650px){.monitoring-section{padding:18px 12px}.monitoring-heading{align-items:start;flex-direction:column}.monitoring-heading h1{font-size:1.8rem}.monitoring-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.monitoring-footer{grid-template-columns:1fr}.monitoring-criterion-heading{flex-wrap:wrap}}
