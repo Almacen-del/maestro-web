@@ -3,6 +3,24 @@ import {expect, it, vi} from "vitest";
 import {DisabledMonitorRepository} from "../data/FirebaseMonitorRepository";
 import {InventorySection} from "./InventorySection";
 
+it("muestra el responsable guardado por línea sin inventar responsables ni confundir cero con sin contar", async () => {
+  const repository = Object.assign(new DisabledMonitorRepository(), {
+    listManageableCatalog: vi.fn().mockResolvedValue({locations: [], lines: [
+      {id: "a", active: true, code: "L1", displayName: "Línea registrada", inventory: {
+        total: 0, females: 0, males: 0, rootstocks: 0, actorDisplayName: "Responsable móvil",
+      }},
+      {id: "b", active: true, code: "L2", displayName: "Línea pendiente"},
+    ]}),
+  });
+  render(<InventorySection repository={repository} />);
+  expect(await screen.findByText("Responsable móvil")).toBeInTheDocument();
+  expect(screen.getByText("Registrada")).toBeInTheDocument();
+  expect(screen.getByText("Sin contar")).toBeInTheDocument();
+  expect(screen.getByText("No disponible", {selector: "td"})).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", {name: "Ver detalle de Línea registrada"}));
+  expect(screen.getByText("Responsable móvil", {selector: "dd"})).toBeInTheDocument();
+});
+
 it("filtra camas, recalcula el total y reinicia la cama al cambiar módulo", async () => {
   const repository = Object.assign(new DisabledMonitorRepository(), {
     listManageableCatalog: vi.fn().mockResolvedValue({locations: [

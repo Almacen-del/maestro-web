@@ -886,6 +886,28 @@ input:focus { outline: 3px solid #9ccca8; border-color: #1b6f3b; }
 .daily-footer > div + div { border-left: 1px solid #cdded1; padding-left: 20px; }
 @media (max-width: 760px) { .daily-processes { padding: 18px 12px; } .daily-summary { grid-template-columns: repeat(2, 1fr); } .daily-heading { align-items: start; flex-direction: column; } }
 
+.nursery-shell .inventory-preview { max-width: 1600px; margin: 0 auto; padding: 28px; }
+.inventory-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.inventory-preview-heading h1 { font: 500 2.4rem/1.1 Georgia, serif; margin: 8px 0; color: #204d38; }
+.inventory-summary-cards { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; }
+.inventory-summary-cards article { padding: 20px; border-radius: 8px; border: 1px solid #d5e2d3; border-top: 3px solid #318552; background: #fff; display: grid; gap: 12px; }
+.inventory-summary-cards article:first-child { background: #204d38; color: #fff; }
+.inventory-summary-cards article:nth-child(2) { background: #e4eddc; }
+.inventory-summary-cards article:nth-child(3) { background: #edf2e6; }
+.inventory-summary-cards article:nth-child(4) { background: #f2eddd; }
+.inventory-summary-cards strong { font-size: 2rem; font-variant-numeric: tabular-nums; }
+.inventory-coverage { display: flex; justify-content: space-between; gap: 18px; margin: 20px 0; padding: 16px 0; border-block: 1px solid #d5e2d3; }
+.inventory-coverage > div { display: grid; gap: 5px; }
+.inventory-coverage span,.inventory-source-note { font-size: .82rem; color: #627264; }
+.inventory-line-link { background: transparent; color: #17693d; padding: 6px 0; border: 0; text-decoration: underline; font-weight: 700; cursor: pointer; }
+.inventory-state { display: inline-block; white-space: nowrap; padding: 5px 8px; border-radius: 12px; background: #f2ead9; color: #715824; font-size: .75rem; }
+.inventory-state--available { background: #dfeddf; color: #205b37; }
+.inventory-line-detail { position: fixed; right: 0; top: 0; bottom: 0; z-index: 10; width: min(430px, 95vw); padding: 26px; background: #fbfcf8; border-left: 1px solid #c6d8c7; box-shadow: -8px 0 28px #16362020; overflow-y: auto; }
+.inventory-line-detail h2 { font: 500 1.7rem Georgia,serif; color: #204d38; }
+.inventory-line-detail dt { margin-top: 20px; font-size: .8rem; color: #627264; }
+.inventory-line-detail dd { margin: 6px 0 0; font-weight: 600; }
+@media(max-width: 850px) { .inventory-summary-cards { grid-template-columns: repeat(2,minmax(0,1fr)); } .nursery-shell .inventory-preview { padding: 18px 12px; } .inventory-coverage { flex-direction: column; } }
+
 /* Acceso y restauración coherentes con la identidad del vivero. */
 .nursery-session-loading { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; background: #f7f6f0; color: #455d43; }
 .nursery-session-loading img { width: 64px; height: 70px; object-fit: contain; }
