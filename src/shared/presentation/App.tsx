@@ -14,6 +14,7 @@ import {AdministrationSection, type AdministrationDestination} from "./Administr
 import {NurserySidebar} from "./NurserySidebar";
 import {NurseryHomeSection} from "./NurseryHomeSection";
 import {DailyProcessesSection} from "./DailyProcessesSection";
+import {ApplicationsSection} from "./ApplicationsSection";
 import {PendingNurseryModule, type NurseryModule} from "./NurseryModules";
 import {CountStatisticsSection} from "./CountStatisticsSection";
 import {DraftJourneysSection} from "./DraftJourneysSection";
@@ -523,7 +524,7 @@ export function App({repository, reportPlatform}: AppProps) {
       ) : !user.canManageCatalog ? (
         <section className="nursery-home"><h1>Secciones en preparación</h1><p>El acceso a las demás secciones está temporalmente desactivado.</p></section>
       ) : user.canManageCatalog ? (
-        nurseryModule === "HOME" ? <NurseryHomeSection repository={repository} /> : nurseryModule === "DAILY" ? <DailyProcessesSection /> : nurseryModule === "INVENTORY" ? <InventorySection repository={repository} /> : <PendingNurseryModule module={nurseryModule} />
+        nurseryModule === "HOME" ? <NurseryHomeSection repository={repository} /> : nurseryModule === "DAILY" ? <DailyProcessesSection /> : nurseryModule === "APPLICATIONS" ? <ApplicationsSection /> : nurseryModule === "INVENTORY" ? <InventorySection repository={repository} /> : <PendingNurseryModule module={nurseryModule} />
       ) : activeSection === "DISCARDS" && user.canReview ? (
         <DiscardsSection repository={repository} user={user} />
       ) : activeSection === "USERS" && user.canManageUsers ? (
