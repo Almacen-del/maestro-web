@@ -7,3 +7,19 @@
 @media(min-width:1450px){.daily-dashboard-main{grid-template-columns:minmax(0,3fr) minmax(290px,1fr)}.daily-ring{flex-basis:125px;width:125px;height:125px}.daily-registers th,.daily-registers td{font-size:12px;padding:10px 8px}.daily-ring-layout li{font-size:11px}.daily-dashboard h2{font-size:15px}}
 @media(max-width:1100px){.daily-dashboard-main{grid-template-columns:1fr}.daily-dashboard-rings{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-dashboard-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.daily-chart-row{grid-template-columns:80px minmax(0,1fr) 30px}}
 @media(max-width:650px){.daily-dashboard{padding:12px}.daily-dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-dashboard-rings,.daily-dashboard-bottom{grid-template-columns:1fr}.daily-dashboard-heading h1{font-size:22px}.daily-ring{flex-basis:120px;width:120px;height:120px}.daily-ring-layout li{font-size:11px}.daily-dashboard-kpis small{font-size:11px}.daily-chart-row{font-size:11px;grid-template-columns:110px minmax(0,1fr) 35px}}
+
+/* Color hierarchy: received records and plant quantities are the primary figures. */
+.daily-dashboard-kpis article{border-top:3px solid var(--card-accent,#439663);background:var(--card-bg,#eff7ed);box-shadow:0 3px 10px #184b2b0a}
+.daily-dashboard-kpis article:nth-child(1){--card-accent:#178d55;--card-bg:linear-gradient(125deg,#d8f1e1,#edf9f1)}
+.daily-dashboard-kpis article:nth-child(2){--card-accent:#409eb0;--card-bg:linear-gradient(125deg,#e0f2f5,#f1fafb)}
+.daily-dashboard-kpis article:nth-child(3){--card-accent:#318e35;--card-bg:linear-gradient(125deg,#dceec5,#f1f8e8)}
+.daily-dashboard-kpis article:nth-child(4){--card-accent:#c69b31;--card-bg:linear-gradient(125deg,#fff0cc,#fffaf0)}
+.daily-dashboard-kpis article:nth-child(5){--card-accent:#8980af;--card-bg:linear-gradient(125deg,#eee8f6,#faf7fd)}
+.daily-dashboard-kpis article:nth-child(6){--card-accent:#c58b60;--card-bg:linear-gradient(125deg,#f8e9da,#fff8f1)}
+.daily-dashboard-kpis article small{color:#395347}.daily-dashboard-kpis article:nth-child(1) strong,.daily-dashboard-kpis article:nth-child(3) strong{color:#145b30;font-size:26px}
+.daily-dashboard-kpis article:nth-child(2)>span{background:#bfe4eb;color:#216073}.daily-dashboard-kpis article:nth-child(3)>span{background:#bedfa4;color:#27612b}.daily-dashboard-kpis article:nth-child(4)>span{background:#f8df9b;color:#725512}.daily-dashboard-kpis article:nth-child(5)>span{background:#dfd3ee;color:#5b467c}.daily-dashboard-kpis article:nth-child(6)>span{background:#f0d5ba;color:#79502c}
+.daily-registers{border-top:3px solid #268657}.daily-registers thead{background:#e3f1e8;color:#275b3f}
+.daily-dashboard-rings .daily-chart:first-child{border-top:3px solid #48a272;background:linear-gradient(#edf8f0 0,#fff 65px)}
+.daily-dashboard-rings .daily-chart:nth-child(2){border-top:3px solid #71a3af;background:linear-gradient(#eef7f9 0,#fff 65px)}
+.daily-dashboard-bottom .daily-chart:nth-child(1){border-top:3px solid #5aa177}.daily-dashboard-bottom .daily-chart:nth-child(2){border-top:3px solid #d1af4b}.daily-dashboard-bottom .daily-chart:nth-child(3){border-top:3px solid #4c9e9a}
+.daily-dashboard-footer{background:linear-gradient(110deg,#cbe7d4,#eaf3d9);border-left:4px solid #3c9158}
