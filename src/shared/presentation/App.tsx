@@ -31,6 +31,7 @@ import {DemoNursery, exportDemo} from "./DemoNursery";
 import {GeneralReportSection} from "./GeneralReportSection";
 import {UsersSection} from "./UsersSection";
 import "./app.css";
+import "./report-refresh.css";
 
 interface AppProps {
   readonly repository: MonitorRepository;

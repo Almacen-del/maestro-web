@@ -18,7 +18,8 @@ describe("Informe general",()=>{
   it("no inventa actividad productiva",async()=>{
     const repository=Object.assign(new DisabledMonitorRepository(),{listManageableCatalog:async()=>demoData.catalog});
     render(<GeneralReportSection repository={repository}/>);
-    expect(await screen.findByText("Módulo DEMO 1")).toBeInTheDocument();
+    expect(await screen.findByRole("rowheader", {name:"Módulo DEMO 1"})).toBeInTheDocument();
+    expect(screen.getByRole("meter", {name:"Plantas en Módulo DEMO 1"})).toBeInTheDocument();
     expect(screen.getByText(/La conexión productiva/)).toBeInTheDocument();
   });
 });

@@ -1,0 +1,51 @@
+/* Visual adaptation of the recovered reference; existing navigation and data remain intact. */
+.nursery-sidebar { background: linear-gradient(180deg,#043d2d,#002b20); color:#eff8f1; box-shadow:none; gap:14px; }
+.nursery-brand { padding-bottom:16px; }
+.nursery-brand img { border-radius:5px; }
+.nursery-brand span { color:#c3d9cb; }
+.nursery-nav-item { min-height:42px; border-radius:5px; padding:9px 10px; font-size:.88rem; font-weight:500; color:#e4eee8; }
+.nursery-nav-item:hover { background:#185e49; color:white; }
+.nursery-nav-item--active { background:#246550; border-left-color:#95ddb0; box-shadow:inset 0 0 0 1px #37775e; color:white; }
+.nursery-nav-icon { width:25px; height:25px; font-size:1.2rem; color:#d0eddb; }
+.nursery-nav-item:focus-visible,.nursery-toggle:focus-visible,.nursery-logout:focus-visible { outline:2px solid #bde7a5; outline-offset:3px; }
+.nursery-sidebar__notice { color:#d3e6d9; border-top:1px solid #ffffff18; padding-top:18px; }
+.nursery-session { background:#ffffff09; border-radius:4px; border-top:1px solid #ffffff16; }
+.nursery-logout { border-radius:5px; }
+.general-report { max-width:1600px; background:#f3f8f5; padding:22px; color:#183a31; font-family:Arial,sans-serif; }
+.general-report-heading { background:transparent; border:0; padding:0 0 18px; border-bottom:1px solid #dfebe4; }
+.general-report-heading small { color:#557a68; font-size:.68rem; letter-spacing:.1em; font-weight:700; }
+.general-report h1 { font:700 1.8rem Arial,sans-serif; color:#12372b; margin:6px 0; }
+.general-report h2 { font:700 1.05rem Arial,sans-serif; }
+.general-report p { font-size:.85rem; color:#60756c; margin:8px 0 16px; }
+.general-report-heading p { margin:0; }
+.general-report button { border-radius:5px; font-size:.82rem; }
+.general-report-heading button,.general-report footer button { background:#006441; border-color:#006441; color:white; }
+.general-report-kpis { gap:10px; }
+.general-report-kpis article { position:relative; background:#fff; border:1px solid #e0ebe4; border-radius:7px; padding:16px 18px; gap:8px; border-top:3px solid #51ac74; }
+.general-report-kpis article:nth-child(2) { border-top-color:#acc68c; }
+.general-report-kpis article:nth-child(3) { border-top-color:#e2c366; }
+.general-report-kpis article:nth-child(4) { border-top-color:#7baaaa; }
+.general-report-kpis article span { color:#60756c; font-size:.82rem; }
+.general-report-kpis strong { font-size:1.65rem; color:#143b2c; font-variant-numeric:tabular-nums; }
+.general-report-overview { display:grid; grid-template-columns:minmax(0,2.2fr) minmax(240px,1fr); gap:14px; margin:18px 0; }
+.general-report-table { margin:0; border:1px solid #e0ebe4; border-radius:7px; background:white; }
+.general-report table { background:white; font-size:.8rem; }
+.general-report caption { padding:16px; font-size:1rem; color:#163b2e; }
+.general-report thead { background:#f0f5f3; color:#52675d; }
+.general-report th,.general-report td { padding:12px 10px; border-color:#edf2ee; }
+.general-report tbody tr:hover { background:#f6faf7; }
+.general-report-distribution { background:white; border:1px solid #e0ebe4; border-radius:7px; padding:16px; min-width:0; }
+.general-report-distribution h2 { margin:0 0 18px; }
+.general-report-distribution small { display:block; color:#718277; margin-top:16px; font-size:.72rem; }
+.general-report-bar { display:grid; grid-template-columns:1fr auto; gap:6px; margin:12px 0; font-size:.78rem; }
+.general-report-bar meter { grid-column:1/-1; width:100%; height:12px; border:0; background:#edf5ee; border-radius:3px; }
+.general-report-bar meter::-webkit-meter-bar { background:#edf5ee; border:0; }
+.general-report-bar meter::-webkit-meter-optimum-value { background:linear-gradient(90deg,#a2d6ad,#009447); }
+.general-report-bar meter::-moz-meter-bar { background:#329b5d; }
+.general-report-period { padding:12px 16px; background:#eaf2ec; border-radius:6px; margin:18px 0; }
+.general-report-period h2 { margin-right:auto; }
+.general-report-period label { font-size:.8rem; }
+.general-report footer { background:#deede2; border-radius:6px; padding:14px 16px; }
+.general-report footer small { color:#496354; font-size:.75rem; }
+@media(max-width:1100px) { .general-report-overview { grid-template-columns:1fr; } }
+@media(max-width:600px) { .general-report { padding:14px; } .general-report-heading { align-items:flex-start; flex-wrap:wrap; } .general-report h1 { font-size:1.5rem; } .general-report-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } .general-report-period label { flex-wrap:wrap; } }
