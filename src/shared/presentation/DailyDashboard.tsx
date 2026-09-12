@@ -1,5 +1,6 @@
 import {useState, type ReactNode} from "react";
 import type {DailyActivity} from "../domain/DailyActivityContract";
+import {PercentBars} from "./PercentBars";
 import {OfficialExport} from "./OfficialExport";
 import {dailyPages} from "./officialExportMappings";
 import "./daily-dashboard.css";
@@ -11,14 +12,15 @@ function frequencies(values:readonly string[]) {
   return [...counts].sort((a,b)=>b[1]-a[1]);
 }
 function Bars({title,values}:{title:string;values:readonly (readonly [string,number])[]}) {
-  const max=Math.max(1,...values.map(v=>v[1]));
-  return <article className="daily-chart"><h2>{title}</h2>{values.length?values.slice(0,8).map(([name,value])=><div className="daily-chart-row" key={name}><span title={name}>{name}</span><strong>{value.toLocaleString("es-CO")}</strong><meter aria-label={`${title}: ${name}`} min={0} max={max} value={value}/></div>):<p>Sin datos para mostrar.</p>}</article>;
+  const vertical=title==="Registros por fecha";
+  const ordered=vertical?[...values].sort((a,b)=>a[0].localeCompare(b[0])):values;
+  return <article className="daily-chart"><h2>{title}</h2><PercentBars values={ordered} vertical={vertical} unit={title.includes("colaborador")?"participaciones":"registros"} labelPrefix={title+": "}/></article>;
 }
 function Ring({title,values}:{title:string;values:readonly (readonly [string,number])[]}) {
   const colors=["#00a45a","#8ed29d","#f2cd51","#8caec7","#b5c8c0"];
   const grouped=values.length>5?[...values.slice(0,4),["Otras",values.slice(4).reduce((n,v)=>n+v[1],0)] as const]:values;
   const total=grouped.reduce((n,v)=>n+v[1],0);let offset=0;
-  return <article className="daily-chart daily-ring-card"><h2>{title}</h2><div className="daily-ring-layout"><div className="daily-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="46" fill="none" stroke="#edf3ef" strokeWidth="16"/>{grouped.map(([name,value],i)=>{const length=total?value/total*100:0;const start=offset;offset+=length;return <circle key={name} cx="60" cy="60" r="46" pathLength="100" fill="none" stroke={colors[i]} strokeWidth="16" strokeDasharray={`${length} ${100-length}`} strokeDashoffset={-start} transform="rotate(-90 60 60)"/>;})}</svg><div><strong>{total||"—"}</strong><small>registros</small></div></div><ul>{grouped.map(([name,value],i)=><li key={name}><i style={{background:colors[i]}}/><span>{name}</span><strong>{value}</strong></li>)}</ul></div>{!total&&<small className="daily-chart-empty">Sin registros disponibles</small>}</article>;
+  return <article className="daily-chart daily-ring-card"><h2>{title}</h2><div className="daily-ring-layout"><div className="daily-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="46" fill="none" stroke="#edf3ef" strokeWidth="16"/>{grouped.map(([name,value],i)=>{const length=total?value/total*100:0;const start=offset;offset+=length;return <circle key={name} cx="60" cy="60" r="46" pathLength="100" fill="none" stroke={colors[i]} strokeWidth="16" strokeDasharray={`${length} ${100-length}`} strokeDashoffset={-start} transform="rotate(-90 60 60)"/>;})}</svg><div><strong>{total||"—"}</strong><small>registros</small></div></div><ul>{grouped.map(([name,value],i)=><li key={name}><i style={{background:colors[i]}}/><span>{name}</span><strong>{value} · {total?Math.round(value/total*100):0}%</strong></li>)}</ul></div>{!total&&<small className="daily-chart-empty">Sin registros disponibles</small>}</article>;
 }
 export function DailyDashboard({activities,controls,status}:{activities:readonly DailyActivity[]|undefined;controls:ReactNode;status:ReactNode}) {
   const [activity,setActivity]=useState("");const [author,setAuthor]=useState("");const [search,setSearch]=useState("");const [page,setPage]=useState(0);const [detail,setDetail]=useState<DailyActivity>();
