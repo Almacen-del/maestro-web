@@ -9,6 +9,8 @@ import {
   doc,
   getFirestore,
   getDocFromServer,
+  getDocsFromServer,
+  limit,
   onSnapshot,
   query,
   where,
@@ -814,10 +816,10 @@ function parseMigrationReversalResult(value: unknown): MigrationReversalResult {
 
 export class FirebaseMonitorRepository implements MonitorRepository {
   async listDailyActivities(date: string) {
-    if (this.environment !== "EMULATOR") throw new Error("Conexión productiva pendiente");
     const {parseAndroidDaily, dailyActivityFromAndroid} = await import("../domain/DailyActivityContract");
-    const response = await httpsCallable<{date: string}, unknown>(this.functions, "listarProcesosDiariosMovil")({date});
-    const data = response.data as {records?: unknown};
+    const snapshot = await getDocsFromServer(query(collection(this.firestore, "procesosDiariosMovil"), where("date", "==", date), limit(201)));
+    if (snapshot.size > 200) throw new Error("Demasiados registros para esta fecha; se requiere paginación");
+    const data = {records: snapshot.docs.map((entry) => entry.data())};
     if (!data || !Array.isArray(data.records)) throw new Error("Respuesta diaria inválida");
     return data.records.map((value: unknown) => {
       if (!value || typeof value !== "object") throw new Error("Registro diario inválido");

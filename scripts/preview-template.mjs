@@ -1,4 +1,6 @@
 import {createRequire} from 'node:module';
+import process from 'node:process';
+import console from 'node:console';
 import fs from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 const require=createRequire('C:/Users/Almacen/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/runtime.cjs');

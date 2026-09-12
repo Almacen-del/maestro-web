@@ -23,8 +23,15 @@ it("consulta solo el emulador y muestra errores sin inventar un vacío", async (
   expect(screen.queryByText("No hay actividades registradas para esta fecha.")).not.toBeInTheDocument();
 });
 
-it("no llama al nuevo servicio en producción", () => {
-  const repository = Object.assign(new DisabledMonitorRepository(), {environment: "PRODUCTION" as const, listDailyActivities: vi.fn()}) as unknown as MonitorRepository;
+it("consulta producción y muestra los registros confirmados", async () => {
+  const repository = Object.assign(new DisabledMonitorRepository(), {environment: "PRODUCTION" as const, listDailyActivities: vi.fn().mockResolvedValue([])}) as unknown as MonitorRepository;
   render(<DailyProcessesSection repository={repository} />);
+  expect(await screen.findByText("No hay actividades registradas para esta fecha.")).toBeInTheDocument();
+  expect(repository.listDailyActivities).toHaveBeenCalledOnce();
+});
+
+it("mantiene la demostración aislada de producción", () => {
+  const repository = Object.assign(new DisabledMonitorRepository(), {environment: "PRODUCTION" as const, listDailyActivities: vi.fn()}) as unknown as MonitorRepository;
+  render(<DailyProcessesSection repository={repository} activities={[]} />);
   expect(repository.listDailyActivities).not.toHaveBeenCalled();
 });
