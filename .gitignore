@@ -8,3 +8,4 @@ dist/
 *.tsbuildinfo
 .DS_Store
 Thumbs.db
+.export-preview/

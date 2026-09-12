@@ -1,0 +1,11 @@
+import {createRequire} from 'node:module';
+import fs from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+const require=createRequire('C:/Users/Almacen/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/runtime.cjs');
+const {FileBlob,SpreadsheetFile}=await import(pathToFileURL(require.resolve('@oai/artifact-tool')).href);
+const file=process.argv[2];
+const wb=await SpreadsheetFile.importXlsx(await FileBlob.load(file));
+console.log((await wb.inspect({kind:'sheet',include:'id,name',maxChars:1200})).ndjson);
+const result=await wb.render({sheetName:wb.worksheets.getItemAt(0).name,range:'A1:O18',scale:1,format:'png'});
+await fs.mkdir('.export-preview',{recursive:true});
+await fs.writeFile(`.export-preview/${process.argv[3]??'template'}.png`,new Uint8Array(await result.arrayBuffer()));

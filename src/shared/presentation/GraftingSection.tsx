@@ -1,3 +1,5 @@
+import {OfficialExport} from "./OfficialExport";
+import {graftPages} from "./officialExportMappings";
 import {useState} from "react";
 import "./grafting.css";
 
@@ -59,7 +61,7 @@ export function GraftingSection({records}: {readonly records?: readonly Grafting
     {label: "Recolecciones", value: selected?.yemaCollections.length},
     {label: "Árboles madre identificados", value: selected && new Set(selected.yemaCollections.filter((bud) => bud.lot && bud.line && bud.motherTree).map((bud) => JSON.stringify([bud.lot, bud.line, bud.motherTree]))).size},
   ];
-  return <section className="grafting-section" aria-labelledby="grafting-title">
+  return <section className="grafting-section" aria-labelledby="grafting-title"><OfficialExport kind={tab === "PV_F008_INJERTACION" ? "grafts" : "buds"} disabled={!(selected)} build={sheets => selected ? graftPages(sheets, selected) : []}/>
     <header className="grafting-heading"><div><p className="eyebrow">TRAZABILIDAD DEL VIVERO</p><h1 id="grafting-title">Injertación</h1><p>{grafts ? "Verificación de patrones e injertos · PV-F-008" : "Recolección y verificación de yemas · PV-F-007"}</p></div><span className="grafting-mode">{records === undefined ? "Conexión pendiente" : "Solo consulta"}</span></header>
     <div className="grafting-tabs" role="group" aria-label="Tipo de formato"><button type="button" aria-pressed={grafts} onClick={() => {setTab("PV_F008_INJERTACION"); setSelectedId(""); setSearch("");}}>Injertos</button><button type="button" aria-pressed={!grafts} onClick={() => {setTab("PV_F007_YEMAS"); setSelectedId(""); setSearch("");}}>Yemas</button></div>
     <div className="grafting-filters"><label>Mes del registro<input type="month" value={month} onChange={(event) => {setMonth(event.target.value); setSelectedId("");}} /></label><label>Responsable<select value={responsible} onChange={(event) => {setResponsible(event.target.value); setSelectedId("");}}><option value="">Todos</option>{[...new Set(records?.map((record) => record.responsible).filter(Boolean))].sort().map((name) => <option key={name}>{name}</option>)}</select></label><label>Buscar en el detalle<input type="search" placeholder={grafts ? "Módulo, cama, línea o muestra" : "Lote de procedencia, línea o árbol madre"} value={search} onChange={(event) => setSearch(event.target.value)} /></label><button className="button button--secondary" onClick={() => {setMonth(""); setResponsible(""); setSearch(""); setSelectedId("");}}>Limpiar filtros</button></div>

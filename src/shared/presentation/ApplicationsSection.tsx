@@ -1,3 +1,5 @@
+import {OfficialExport} from "./OfficialExport";
+import {applicationPages} from "./officialExportMappings";
 import {useState} from "react";
 import "./applications.css";
 
@@ -40,7 +42,7 @@ export function ApplicationsSection({records}: {readonly records?: readonly Appl
     {label: "Ubicaciones", value: selected && new Set(selected.map((record) => record.location)).size},
     {label: "Ejecutores", value: selected && new Set(selected.map((record) => record.executor).filter(Boolean)).size},
   ];
-  return <section className="applications-section" aria-labelledby="applications-title">
+  return <section className="applications-section" aria-labelledby="applications-title"><OfficialExport kind="applications" disabled={!(selected)} build={sheets => applicationPages(sheets, selected ?? [])}/>
     <header className="applications-heading"><div><p className="eyebrow">CUIDADO DEL VIVERO · PV-F-001</p><h1 id="applications-title">Control de aplicaciones</h1><p>Productos, ubicaciones y responsables de cada registro.</p></div><span className="applications-badge">{records === undefined ? "Conexión pendiente" : "Solo consulta"}</span></header>
     <div className="applications-summary" aria-label="Resumen de registros filtrados">{summaries.map((item) => <article key={item.label}><span>{item.label}</span><strong>{item.value?.toLocaleString("es-CO") ?? "—"}</strong></article>)}</div>
     <div className="applications-filters">

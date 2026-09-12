@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5174 --strictPort",
     "lint": "eslint . --max-warnings=0",
@@ -13,6 +15,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 4174 --strictPort"
   },
   "dependencies": {
+    "fflate": "^0.8.3",
     "firebase": "12.16.0",
     "react": "19.2.7",
     "react-dom": "19.2.7"

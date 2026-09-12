@@ -1,3 +1,5 @@
+import {OfficialExport} from "./OfficialExport";
+import {dailyPages} from "./officialExportMappings";
 import {useEffect, useState} from "react";
 import type {MonitorRepository} from "../domain/MonitorModels";
 import type {DailyActivity} from "../domain/DailyActivityContract";
@@ -23,7 +25,7 @@ export function DailyProcessesSection({activities: providedActivities, repositor
   const activities = enabled ? remote : providedActivities;
   const selected = activities?.filter((activity) => activity.date === date);
   const collaborators = selected ? new Set(selected.flatMap((activity) => activity.collaborators)).size : undefined;
-  return <section className="daily-processes" aria-labelledby="daily-title">
+  return <section className="daily-processes" aria-labelledby="daily-title"><OfficialExport kind="daily" disabled={!(selected)} build={sheets => dailyPages(sheets, selected ?? [])}/>
     <header className="daily-heading"><h1 id="daily-title">Procesos diarios {date.slice(0, 4)}</h1><span className="daily-status">{activities ? "Consulta" : "Conexión pendiente"}</span></header>
     <label className="daily-date">Fecha<input aria-label="Fecha de procesos" type="date" value={date} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
     {enabled && <button type="button" className="button button--secondary" disabled={loading} onClick={() => setRefresh((value) => value + 1)}>Actualizar desde emulador</button>}

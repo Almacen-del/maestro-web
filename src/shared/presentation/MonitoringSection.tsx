@@ -1,3 +1,5 @@
+import {OfficialExport} from "./OfficialExport";
+import {monitoringPages} from "./officialExportMappings";
 import {useState} from "react";
 import "./monitoring.css";
 
@@ -55,7 +57,7 @@ export function MonitoringSection({records}: {readonly records?: readonly Monito
     return {...template, saved, results: template.criteria.map((label, index) => ({label, index, result: saved?.criteria.find((criterion) => criterion.index === index)}))};
   });
   const all = groups.flatMap((group) => group.results);
-  return <section className="monitoring-section" aria-labelledby="monitoring-title">
+  return <section className="monitoring-section" aria-labelledby="monitoring-title"><OfficialExport kind="monitoring" disabled={!(selected)} build={sheets => selected ? monitoringPages(sheets, selected) : []}/>
     <header className="monitoring-heading"><div><p className="eyebrow">PV-F-010 · CALIFICACIÓN DE CARACTERÍSTICAS</p><h1 id="monitoring-title">Monitoreo de vivero</h1><p>Evaluación diaria de los procesos y sus observaciones.</p></div><span className="monitoring-mode">{records === undefined ? "Vista previa · conexión pendiente" : "Solo consulta"}</span></header>
     <div className="monitoring-filters"><label>Fecha<input type="date" value={date} onChange={(event) => {setDate(event.target.value); setRecordId("");}} /></label><label>Responsable<select value={responsible} onChange={(event) => {setResponsible(event.target.value); setRecordId("");}}><option value="">Todos los responsables</option>{[...new Set(records?.map((item) => item.responsible).filter(Boolean))].sort().map((name) => <option key={name}>{name}</option>)}</select></label><label>Resultado<select value={status} onChange={(event) => setStatus(event.target.value as MonitoringStatus | "")}><option value="">Todos los resultados</option>{Object.entries(statuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><button type="button" className="button button--secondary" onClick={() => {setDate(""); setResponsible(""); setStatus(""); setRecordId("");}}>Limpiar filtros</button></div>
     {records === undefined && <p className="monitoring-notice" role="status">Formato sin diligenciar. Los cuatro archivos se usaron como referencia; no se importaron registros ni se interpretaron las marcas del Excel.</p>}

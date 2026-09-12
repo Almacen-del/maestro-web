@@ -1,3 +1,5 @@
+import {OfficialExport} from "./OfficialExport";
+import {inventoryPages} from "./officialExportMappings";
 import {useEffect, useMemo, useState} from "react";
 
 import type {ManageableCatalogData, MonitorRepository} from "../domain/MonitorModels";
@@ -61,7 +63,7 @@ export function InventorySection({repository}: {readonly repository: MonitorRepo
   const latest = registered.map((line) => line.inventory?.updatedAt).filter((value): value is string => Boolean(value)).sort().at(-1);
   const displayDate = (value?: string) => value && !Number.isNaN(Date.parse(value)) ? new Date(value).toLocaleString("es-CO") : "No disponible";
   const display = (value: number) => loading || error || !registered.length ? "—" : value.toLocaleString("es-CO");
-  return <section className="inventory-admin inventory-preview" aria-labelledby="inventory-title">
+  return <section className="inventory-admin inventory-preview" aria-labelledby="inventory-title"><OfficialExport kind="inventory" disabled={!(lines.length && !loading && !error)} build={sheets => inventoryPages(sheets, catalog, lines)}/>
     <header className="inventory-preview-heading"><div><p className="eyebrow">EXISTENCIAS DEL VIVERO</p><h1 id="inventory-title">Inventario</h1><p>Consulta por módulo, cama y línea.</p></div><button className="button button--secondary" disabled={loading} onClick={() => void load()}>{loading ? "Actualizando…" : "Actualizar"}</button></header>
     {error && <p className="alert" role="alert">{error}</p>}
     <div className="inventory-summary-cards">
