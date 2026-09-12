@@ -8,6 +8,7 @@ import {InventorySection} from "./InventorySection";
 import {ModuleMapSection} from "./ModuleMapSection";
 import {NurseryHomeSection} from "./NurseryHomeSection";
 import type {NurseryModule} from "./NurseryModules";
+import {GeneralReportSection} from "./GeneralReportSection";
 
 const now = new Date();
 const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
@@ -62,5 +63,5 @@ export function DemoNursery({module}:{readonly module:NurseryModule}) {
   if(module==="INVENTORY") return <InventorySection repository={repository}/>;
   if(module==="GRAFTING") return <GraftingSection records={grafting}/>;
   if(module==="MAPS") return <ModuleMapSection repository={repository} loading={false}/>;
-  return <section className="grafting-section"><h1>Informe general · DEMO</h1><p>{catalog.lines.reduce((sum,line)=>sum+(line.inventory?.total??0),0).toLocaleString("es-CO")} plantas · 50 líneas · 50 actividades · 50 aplicaciones · 50 monitoreos · 50 registros de injertos · 50 registros de yemas.</p><p>Resumen de prueba; el informe oficial todavía no está implementado.</p></section>;
+  return <GeneralReportSection repository={repository} records={demoData} demo/>;
 }
