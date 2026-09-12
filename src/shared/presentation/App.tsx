@@ -27,6 +27,7 @@ import type {ReportPlatform} from "./InventoryReportsSection";
 import {DiscardsSection} from "./DiscardsSection";
 import {MigrationValidationSection} from "./MigrationValidationSection";
 import {ModuleMapSection} from "./ModuleMapSection";
+import {DemoNursery, exportDemo} from "./DemoNursery";
 import {UsersSection} from "./UsersSection";
 import "./app.css";
 
@@ -87,6 +88,7 @@ export function App({repository, reportPlatform}: AppProps) {
   const [restoringSession, setRestoringSession] = useState(Boolean(repository.restoreSession));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [nurseryModule, setNurseryModule] = useState<NurseryModule>("HOME");
+  const [demoMode, setDemoMode] = useState(false);
   const [activeSection, setActiveSection] = useState<
     "DASHBOARD" | "MONITOR" | "STATISTICS" | "MAP" | "INVENTORY" | "ADMIN" | "LOTS" | "DISCARDS" | "JOURNEYS" | "REPORTS" | "USERS" | "CATALOG" | "MIGRATION"
   >("DASHBOARD");
@@ -526,7 +528,7 @@ export function App({repository, reportPlatform}: AppProps) {
       ) : !user.canManageCatalog ? (
         <section className="nursery-home"><h1>Secciones en preparación</h1><p>El acceso a las demás secciones está temporalmente desactivado.</p></section>
       ) : user.canManageCatalog ? (
-        nurseryModule === "HOME" ? <NurseryHomeSection repository={repository} /> : nurseryModule === "DAILY" ? <DailyProcessesSection repository={repository} /> : nurseryModule === "MONITORING" ? <MonitoringSection /> : nurseryModule === "APPLICATIONS" ? <ApplicationsSection /> : nurseryModule === "INVENTORY" ? <InventorySection repository={repository} /> : nurseryModule === "GRAFTING" ? <GraftingSection /> : nurseryModule === "MAPS" ? <ModuleMapSection repository={repository} loading={false} /> : <PendingNurseryModule module={nurseryModule} />
+        <><div style={{padding:"12px 28px",background:demoMode?"#fff0cc":"transparent",display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><button type="button" onClick={()=>setDemoMode(!demoMode)}>{demoMode?"Salir de demostración":"Ver datos de prueba"}</button>{demoMode && <><strong>DEMOSTRACIÓN · Datos ficticios, no se guardan en Firebase</strong><button type="button" onClick={exportDemo}>Descargar datos DEMO (JSON)</button></>}</div>{demoMode ? <DemoNursery key={`demo-${nurseryModule}`} module={nurseryModule}/> : nurseryModule === "HOME" ? <NurseryHomeSection repository={repository} /> : nurseryModule === "DAILY" ? <DailyProcessesSection repository={repository} /> : nurseryModule === "MONITORING" ? <MonitoringSection /> : nurseryModule === "APPLICATIONS" ? <ApplicationsSection /> : nurseryModule === "INVENTORY" ? <InventorySection repository={repository} /> : nurseryModule === "GRAFTING" ? <GraftingSection /> : nurseryModule === "MAPS" ? <ModuleMapSection repository={repository} loading={false} /> : <PendingNurseryModule module={nurseryModule} />}</>
       ) : activeSection === "DISCARDS" && user.canReview ? (
         <DiscardsSection repository={repository} user={user} />
       ) : activeSection === "USERS" && user.canManageUsers ? (
