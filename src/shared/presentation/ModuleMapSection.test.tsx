@@ -57,6 +57,15 @@ function repository(): MonitorRepository {
 }
 
 describe("ModuleMapSection", () => {
+  it("conserva el mapa oficial sin jornada aunque no se puedan cargar los lotes", async () => {
+    const repo = repository();
+    repo.listManageableLots = async () => { throw new Error("unavailable"); };
+    render(<ModuleMapSection repository={repo} loading={false} />);
+    fireEvent.click(await screen.findByRole("button", {name: /Línea 38: Realizada/}));
+    expect(screen.getByText("160")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("No fue posible cargar los lotes");
+    expect(screen.getByRole("heading", {name: "Mapas"})).toBeInTheDocument();
+  });
   it("representa estados del módulo y abre el detalle real de una línea", async () => {
     render(<ModuleMapSection repository={repository()} snapshot={snapshot} loading={false} />);
     expect(await screen.findByText("1 realizadas")).toBeInTheDocument();

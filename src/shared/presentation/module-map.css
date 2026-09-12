@@ -1,0 +1,20 @@
+.module-map.module-map {width:100%;max-width:1500px;margin:auto;padding:28px;box-sizing:border-box;color:#204d38}
+.module-map .module-map__heading {padding:20px 24px;background:#e3ead8;border-left:4px solid #688354;align-items:center;gap:18px}
+.module-map .module-map__heading h1 {font:500 2.3rem/1.1 Georgia,serif;margin:8px 0}
+.module-map .module-map__heading p {font-size:.88rem;line-height:1.5}
+.module-map .module-map__heading select {background:#fffdf6;color:#204d38;border:1px solid #b4c4a6;border-radius:4px;padding:10px;max-width:100%;font:inherit}
+.module-map .module-map__summary span {border:0;border-radius:3px;background:#e9eddf}
+.module-map .module-map__layout {grid-template-columns:minmax(0,1.4fr) minmax(280px,.7fr)}
+.module-map .module-plan {border:1px solid #a6b894;border-radius:4px;box-shadow:none;background:#edf0e3;overflow:auto;max-height:70vh}
+.module-map .module-plan__beds {gap:34px}
+.module-map .module-bed__lines {background:#d9d1af;padding:8px;gap:5px}
+.module-map .module-line {min-height:25px;border-radius:2px;color:white}
+.module-map .module-line--completed {background:#367348}
+.module-map .module-line--working {background:#a87317}
+.module-map .module-line--pending {background:#a94f42}
+.module-map .module-line-detail {position:static;border-radius:4px;box-shadow:none;border:1px solid #d0dac5;background:#fffdf7}
+.module-map .module-line-detail__values div {border-radius:2px;background:#edf0e4}
+.module-map .module-line-detail__heading h2 {font-family:Georgia,serif;font-weight:500}
+.module-map .module-plan__north {display:none}
+@media(max-width:1000px){.module-map .module-map__layout{grid-template-columns:1fr}.module-map .module-map__heading{align-items:stretch;flex-direction:column}.module-map .module-line-detail__empty{min-height:90px}}
+@media(max-width:600px){.module-map.module-map{padding:14px}.module-map .module-map__heading{padding:16px}.module-map .module-map__heading h1{font-size:1.8rem}.module-map .module-plan__beds{min-width:0;margin-inline:4px}.module-map .module-plan{padding-inline:8px}.module-map .module-map__heading label{min-width:0}}
