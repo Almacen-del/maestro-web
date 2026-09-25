@@ -42,6 +42,8 @@ Antes de publicar: decidir dominio/hosting y autorizar el dominio en Authenticat
 
 En Vercel, configure las seis variables anteriores para Production y Preview. `vercel.json` ejecuta el build, publica exclusivamente `dist/`, aplica cabeceras de seguridad y evita cachear permanentemente `index.html`. El archivo `.vercel/` es local y nunca se versiona.
 
+También se admiten los nombres de configuración Web que crea la integración Firebase de Vercel: `apiKey`, `appId`, `authDomain` y `projectId`. En Vercel, el build fija automáticamente `production` y deshabilita emuladores; los nombres `VITE_` explícitos tienen prioridad. `storageBucket`, `messagingSenderId` y `measurementId` no son necesarios para las funciones actuales.
+
 Rollback local: volver a utilizar el programa Windows conservado. No hay migración de datos ni recursos remotos que revertir.
 
 ## Verificación de esta migración

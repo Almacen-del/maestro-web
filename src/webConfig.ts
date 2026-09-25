@@ -1,7 +1,7 @@
 import {loadFirebaseConfig} from "./shared/core/firebaseConfig";
 
 export function loadWebConfig(
-  environment: Readonly<Record<string, string | undefined>> = import.meta.env,
+  environment: Readonly<Record<string, string | undefined>> = __WEB_BUILD_ENV__,
   page: Pick<Location, "protocol" | "hostname"> = window.location,
 ) {
   const config = loadFirebaseConfig(environment);
