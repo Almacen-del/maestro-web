@@ -6,6 +6,16 @@ const records: MonitoringRecord[] = [
   {id:"a",date:"2026-08-01",responsible:"Ana",groups:[{id:"watering",criteria:[{index:0,status:"FAIL",observations:"Revisar riego"}]}]},
   {id:"b",date:"2026-09-01",responsible:"Luis",groups:[]},
 ];
+it("abre solo las evaluaciones del proceso sin navegar al historial", () => {
+  render(<MonitoringSection records={records}/>);
+  fireEvent.click(screen.getByRole("button",{name:/^Riego/}));
+  const dialog = screen.getByRole("dialog",{name:"Evaluaciones de Riego"});
+  expect(within(dialog).getByText("Revisar riego")).toBeInTheDocument();
+  expect(within(dialog).queryByText("Deshierbe y guadaña")).not.toBeInTheDocument();
+  expect(screen.queryByText("Matriz de monitoreo")).not.toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole("button",{name:"Cerrar evaluaciones"}));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
 it("pagina varios registros y filtra por proceso y responsable", () => {
   render(<MonitoringSection records={records}/>);
   fireEvent.click(screen.getByRole("button",{name:"Historial"}));
