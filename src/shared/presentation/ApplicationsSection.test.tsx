@@ -13,7 +13,7 @@ it("presenta los 15 campos oficiales en la planilla y conserva cero y no aplica"
   const table = screen.getByRole("table");
   expect(within(table).getAllByRole("columnheader")).toHaveLength(16);
   for (const name of ["Hora de aplicación", "Cama", "Línea", "Unidad (ml/g)", "Objetivo del insumo", "Observaciones"]) {
-    expect(within(table).getByRole("columnheader", {name, exact: true})).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", {name})).toBeInTheDocument();
   }
   expect(within(table).getByText("0")).toBeInTheDocument();
   expect(within(table).getAllByText("No aplica")).toHaveLength(2);
