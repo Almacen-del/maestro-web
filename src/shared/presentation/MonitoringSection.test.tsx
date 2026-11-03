@@ -29,7 +29,9 @@ it("separa no aplica de sin evaluar, conserva tratamientos y filtra resultados",
   expect(screen.getByText("200 ml")).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("Resultado"), {target: {value: "FAIL"}});
   expect(screen.getAllByText("No cumple", {selector: ".monitoring-result"})).toHaveLength(1);
-  expect(screen.queryByText("Deshierbe y guadaña")).not.toBeInTheDocument();
+  expect(screen.queryByText("Deshierbe y guadaña", {selector: "summary strong"})).not.toBeInTheDocument();
+  expect(screen.getByText("50%")).toBeInTheDocument();
+  expect(screen.getByLabelText("Cobertura: Riego")).toHaveAttribute("value", "2");
   expect(screen.getByText("Observación del bloque")).toBeInTheDocument();
 });
 
