@@ -34,6 +34,7 @@ import "./app.css";
 import "./report-refresh.css";
 import "./module-reference.css";
 import "./sidebar-refresh.css";
+import "./module-color-theme.css";
 
 interface AppProps {
   readonly repository: MonitorRepository;

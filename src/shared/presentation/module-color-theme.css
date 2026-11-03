@@ -1,0 +1,62 @@
+/* Shared decoration from Procesos diarios. Never recolor semantic states or map lines. */
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact){
+  --module-green:#178d55;--module-blue:#409eb0;--module-gold:#c69b31;--module-lavender:#8980af;
+  background:radial-gradient(ellipse at 98% 0,#e1efe3 0,transparent 35%),#f5f9f6;
+}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-heading,.compact-monitor-header,.monitoring-heading,.grafting-heading,.inventory-preview-heading,.module-map__heading,.general-report-heading){
+  position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(110deg,#e1f1e5,#f2f8ed 68%,#e0eee2);
+  border:1px solid #d3e6d7;border-left:4px solid #268657;border-radius:10px;padding:12px 15px;margin-bottom:12px;
+}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-heading,.compact-monitor-header,.monitoring-heading,.grafting-heading,.inventory-preview-heading,.module-map__heading,.general-report-heading)::after{
+  content:"";position:absolute;z-index:-1;pointer-events:none;right:3%;top:-28px;width:120px;height:150px;border:1px solid #6aa67c28;border-radius:90% 0 90% 0;transform:rotate(25deg);box-shadow:35px 12px 0 #75a97a0d,-35px 20px 0 #75a97a0d;
+}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article{
+  --tile-accent:#178d55;--tile-start:#d8f1e1;--tile-end:#edf9f1;
+  position:relative;isolation:isolate;overflow:hidden;border:1px solid #d4e4d8;border-top:3px solid var(--tile-accent);border-radius:10px;
+  background:linear-gradient(125deg,var(--tile-start),var(--tile-end));box-shadow:0 3px 10px #184b2b0a;
+}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article:nth-child(6n+2){--tile-accent:#409eb0;--tile-start:#e0f2f5;--tile-end:#f1fafb}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article:nth-child(6n+3){--tile-accent:#318e35;--tile-start:#dceec5;--tile-end:#f1f8e8}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article:nth-child(6n+4){--tile-accent:#c69b31;--tile-start:#fff0cc;--tile-end:#fffaf0}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article:nth-child(6n+5){--tile-accent:#8980af;--tile-start:#eee8f6;--tile-end:#faf7fd}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article:nth-child(6n+6){--tile-accent:#c58b60;--tile-start:#f8e9da;--tile-end:#fff8f1}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article::after{
+  content:"";position:absolute;z-index:-1;pointer-events:none;right:-14px;bottom:-23px;width:76px;height:76px;border:12px solid #ffffff48;border-radius:50%;
+}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article :is(span,small){color:#395347}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-summary,.compact-monitor-kpis,.grafting-summary,.inventory-summary-cards,.map-compact-kpis,.general-report-kpis)>article strong{color:#184735}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.agro-analytics>article,.compact-monitor-card,.inventory-chart,.graft-analytics>article,.report-executive-row>.report-surface){
+  border-top:3px solid #48a272;background:linear-gradient(#edf8f0 0,#fff 75px);box-shadow:0 3px 12px #183c2808;
+}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.agro-analytics>article,.compact-monitor-card,.inventory-chart,.graft-analytics>article,.report-executive-row>.report-surface):nth-child(2){
+  border-top-color:#71a3af;background:linear-gradient(#eef7f9 0,#fff 75px);
+}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.agro-history,.inventory-stock-card,.graft-data-card,.general-report-table,.map-plan-card){border-top:3px solid #268657}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.agro-detail-panel,.module-line-detail,.general-report-distribution){border-top:3px solid #7c94b8;background:linear-gradient(#edf4fb,#fff 95px)}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.inventory-attention,.graft-operations,.report-attention){border-top:3px solid #c69b31;background:linear-gradient(#fff8e7,#fff 95px)}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.applications-filters,.compact-monitor-toolbar,.grafting-filters,.map-compact-toolbar,.general-report-period){background:linear-gradient(110deg,#edf6f0,#f7faf5);border-color:#d5e6da}
+.nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+ :is(.agro-view-tabs,.grafting-tabs,.compact-monitor-toolbar) button[aria-pressed=true]{background:#176e49;color:white;box-shadow:0 2px 6px #16533518}
+.nursery-shell .map-compact .map-module-cards button{border-top:3px solid #4c9e9a;background:linear-gradient(125deg,#e9f5f2,#fff)}
+.nursery-shell .map-compact .map-module-cards button[aria-pressed=true]{border-color:#268657;background:linear-gradient(125deg,#d8f1e1,#edf9f1)}
+@media(max-width:650px){
+  .nursery-shell section:is(.applications-section.agro-dashboard,.monitoring-section,.grafting-section.grafting-compact,.inventory-preview.inventory-compact,.module-map.map-compact,.general-report.report-compact)
+   :is(.applications-heading,.compact-monitor-header,.monitoring-heading,.grafting-heading,.inventory-preview-heading,.module-map__heading,.general-report-heading){padding:10px 12px}
+}
