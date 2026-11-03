@@ -57,12 +57,27 @@ function repository(): MonitorRepository {
 }
 
 describe("ModuleMapSection", () => {
+  it("permite acercar y filtrar sin quitar líneas del plano", async () => {
+    render(<ModuleMapSection repository={repository()} loading={false} />);
+    const pending = await screen.findByRole("button", {name: /Línea 37: Pendiente/});
+    fireEvent.click(screen.getByRole("button", {name: "Acercar mapa"}));
+    expect(screen.getByText("120%")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", {name: "Restablecer zoom"}));
+    expect(screen.getByText("100%")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Estado"), {target: {value: "completed"}});
+    expect(pending).toHaveClass("module-line--muted");
+    expect(screen.getByText("1 de 2 líneas resaltadas")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", {name: "Limpiar filtros"}));
+    expect(pending).not.toHaveClass("module-line--muted");
+    fireEvent.click(screen.getByRole("button", {name: "Siguiente línea →"}));
+    expect(screen.getByText("160", {selector: "dd"})).toBeInTheDocument();
+  });
   it("conserva el mapa oficial sin jornada aunque no se puedan cargar los lotes", async () => {
     const repo = repository();
     repo.listManageableLots = async () => { throw new Error("unavailable"); };
     render(<ModuleMapSection repository={repo} loading={false} />);
     fireEvent.click(await screen.findByRole("button", {name: /Línea 38: Realizada/}));
-    expect(screen.getByText("160")).toBeInTheDocument();
+    expect(screen.getByText("160", {selector: "dd"})).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("No fue posible cargar los lotes");
     expect(screen.getByRole("heading", {name: "Mapas"})).toBeInTheDocument();
   });
@@ -74,7 +89,7 @@ describe("ModuleMapSection", () => {
     expect(screen.getByText("Lote julio")).toBeInTheDocument();
     expect(screen.getByText("120")).toBeInTheDocument();
     expect(screen.getByText("30")).toBeInTheDocument();
-    expect(screen.getByText("160")).toBeInTheDocument();
+    expect(screen.getByText("160", {selector: "dd"})).toBeInTheDocument();
     expect(screen.getByText("4")).toBeInTheDocument();
   });
 
