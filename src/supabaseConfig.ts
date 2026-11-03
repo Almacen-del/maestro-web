@@ -1,7 +1,10 @@
 export const VIVERO_SUPABASE_HOST = "gfgsnnweyfryfcqdnlvw.supabase.co";
 
 export function loadSupabaseConfig(
-  environment: Readonly<Record<string, string | undefined>> = import.meta.env,
+  environment: Readonly<Record<string, string | undefined>> = {
+    VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_PUBLISHABLE_KEY: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  },
   page: Pick<Location, "protocol" | "hostname"> = window.location,
 ) {
   const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(page.hostname);
