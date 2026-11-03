@@ -3,7 +3,7 @@ import "./module-map.css";
 import "./map-compact.css";
 import type {ManageableCatalogData, ManageableCatalogLine, ManageableCatalogLocation, MonitorLine, MonitorRepository, MonitorSnapshot, ProductionLotSummary} from "../domain/MonitorModels";
 
-interface Props { readonly repository: MonitorRepository; readonly snapshot?: MonitorSnapshot; readonly loading: boolean; }
+interface Props { readonly repository: Pick<MonitorRepository, "listManageableCatalog" | "listManageableLots">; readonly snapshot?: MonitorSnapshot; readonly loading: boolean; readonly dataRevision?: number; }
 type VisualState = "completed" | "working" | "pending";
 interface MapLine { readonly catalog: ManageableCatalogLine; readonly nursery: string; readonly module: string; readonly bed: string; readonly operational?: MonitorLine; readonly lot?: ProductionLotSummary; }
 
@@ -13,7 +13,7 @@ function ancestor(items: readonly ManageableCatalogLocation[], type: string, fal
 function visualState(line: MapLine): VisualState { if (["EN_CONTEO", "PENDIENTE_REVISION"].includes(line.operational?.state ?? "")) return "working"; if (line.catalog.inventory?.total === 0) return "pending"; if (line.operational?.state === "APROBADA" || line.catalog.inventory) return "completed"; return "pending"; }
 function visualLabel(line: MapLine) { return visualState(line) === "completed" ? "Realizada" : visualState(line) === "working" ? "En proceso" : line.catalog.inventory?.total === 0 ? "Vacía" : "Pendiente"; }
 
-export function ModuleMapSection({repository, snapshot, loading}: Props) {
+export function ModuleMapSection({repository, snapshot, loading, dataRevision = 0}: Props) {
   const [catalog, setCatalog] = useState<ManageableCatalogData>({locations: [], lines: []});
   const [zoom, setZoom] = useState(1);
   const [search, setSearch] = useState("");
@@ -34,7 +34,7 @@ export function ModuleMapSection({repository, snapshot, loading}: Props) {
       setCatalogLoading(false);
     });
     return () => { active = false; };
-  }, [repository]);
+  }, [repository, dataRevision]);
   const mapLines = useMemo(() => { const locations = new Map(catalog.locations.map((item) => [item.id, item])); const operational = new Map((snapshot?.lines ?? []).map((item) => [item.lineId, item])); const lotByLine = new Map(lots.filter((lot) => (lot.lotType ?? "SIEMBRA") === "SIEMBRA").flatMap((lot) => lot.lineIds.map((lineId) => [lineId, lot] as const))); return catalog.lines.filter((line) => line.active).map((line): MapLine => { const path = lineage(line, locations); const nearest = path[0]?.displayName ?? "Ubicación sin identificar"; return {catalog: line, nursery: ancestor(path, "VIVERO", path.at(-1)?.displayName ?? nearest), module: ancestor(path, "MOD", nearest), bed: ancestor(path, "CAMA", nearest), operational: operational.get(line.id), lot: lotByLine.get(line.id)}; }); }, [catalog, lots, snapshot]);
   const modules = useMemo(() => { const grouped = new Map<string, MapLine[]>(); for (const line of mapLines) grouped.set(line.module, [...(grouped.get(line.module) ?? []), line]); return [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b, "es", {numeric: true})); }, [mapLines]);
   const [selectedModule, setSelectedModule] = useState<string>(); const [selectedLineId, setSelectedLineId] = useState<string>();

@@ -25,7 +25,7 @@ export function summarizeCatalog(catalog:ManageableCatalogData) {
   }
   return [...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,"es",{numeric:true}));
 }
-export function GeneralReportSection({repository,records,demo=false}:{readonly repository:MonitorRepository;readonly records?:Records;readonly demo?:boolean}) {
+export function GeneralReportSection({repository,records,demo=false}:{readonly repository:Pick<MonitorRepository,"listManageableCatalog">;readonly records?:Records;readonly demo?:boolean}) {
   const [chartSource,setChartSource]=useState<"activities"|"applications"|"monitoring"|"grafting">("activities");
   const [lineId,setLineId]=useState<string>();
   const [catalog,setCatalog]=useState<ManageableCatalogData>();const [error,setError]=useState(false);const [refresh,setRefresh]=useState(0);const [month,setMonth]=useState("");

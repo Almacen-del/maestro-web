@@ -19,7 +19,7 @@ function PhotoSpace({number, label}: {readonly number: number; readonly label: s
   return <figure className={`nursery-photo nursery-photo--${number}`}><span aria-hidden="true">✳</span><figcaption><small>FOTOGRAFÍA {number} · POR INCORPORAR</small><strong>{label}</strong><p>Espacio reservado para una fotografía real del vivero.</p></figcaption></figure>;
 }
 
-export function NurseryHomeSection({repository}: {readonly repository: MonitorRepository}) {
+export function NurseryHomeSection({repository, dataRevision = 0}: {readonly repository: Pick<MonitorRepository, "listManageableCatalog">; readonly dataRevision?: number}) {
   const [catalog, setCatalog] = useState<ManageableCatalogData>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -30,7 +30,7 @@ export function NurseryHomeSection({repository}: {readonly repository: MonitorRe
     catch { setError("No fue posible consultar el inventario. Intenta actualizar de nuevo."); }
     finally { setLoading(false); }
   };
-  useEffect(() => { void load(true); }, []);
+  useEffect(() => { let active = true; setLoading(true); setError(undefined); void repository.listManageableCatalog(true).then(value=>{if(active)setCatalog(value);}).catch(()=>{if(active)setError("No fue posible consultar el inventario.");}).finally(()=>{if(active)setLoading(false);}); return ()=>{active=false;}; }, [repository, dataRevision]);
   const lines = catalog?.lines.filter((line) => line.active) ?? [];
   const total = lines.reduce((sum, line) => sum + (line.inventory?.total ?? 0), 0);
   const pending = lines.filter((line) => !line.inventory).length;

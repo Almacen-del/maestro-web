@@ -4,7 +4,7 @@ import type {MonitorRepository} from "../domain/MonitorModels";
 import type {DailyActivity} from "../domain/DailyActivityContract";
 export type {DailyActivity} from "../domain/DailyActivityContract";
 
-export function DailyProcessesSection({activities: providedActivities, repository}: {readonly activities?: readonly DailyActivity[]; readonly repository?: MonitorRepository}) {
+export function DailyProcessesSection({activities: providedActivities, repository, dataRevision = 0}: {readonly activities?: readonly DailyActivity[]; readonly repository?: Pick<MonitorRepository, "listDailyActivities">; readonly dataRevision?: number}) {
   const [date, setDate] = useState(() => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -20,7 +20,7 @@ export function DailyProcessesSection({activities: providedActivities, repositor
     setLoading(true); setError(false); setRemote(undefined);
     void repository.listDailyActivities(date).then((value) => {if (active) setRemote(value);}).catch(() => {if (active) setError(true);}).finally(() => {if (active) setLoading(false);});
     return () => {active = false;};
-  }, [date, enabled, repository, refresh]);
+  }, [date, enabled, repository, refresh, dataRevision]);
   const activities = enabled ? remote : providedActivities;
   const selected = activities?.filter((activity) => activity.date === date);
   const status=loading?<p role="status">Cargando registros…</p>:error?<p role="alert">No fue posible consultar. Revisa la sesión, los permisos y la conexión.</p>:!activities?<p role="status"><strong>Conexión pendiente</strong> · La conexión con los procesos diarios del celular está pendiente.</p>:!selected?.length?<p role="status">No hay actividades registradas para esta fecha.</p>:null;
