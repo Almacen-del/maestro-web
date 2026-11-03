@@ -50,6 +50,7 @@ export function MonitoringSection({records}: {readonly records?: readonly Monito
   const [responsible, setResponsible] = useState("");
   const [recordId, setRecordId] = useState("");
   const [status, setStatus] = useState<MonitoringStatus | "">("");
+  const [activeGroup, setActiveGroup] = useState<string>("weeding");
   const filtered = records?.filter((item) => (!date || item.date === date) && (!responsible || item.responsible === responsible)).slice().sort((a, b) => b.date.localeCompare(a.date));
   const selected = filtered?.find((item) => item.id === recordId) ?? filtered?.[0];
   const groups = monitoringTemplate.map((template) => {
@@ -72,15 +73,15 @@ export function MonitoringSection({records}: {readonly records?: readonly Monito
       <article className="monitoring-progress"><h2>Cobertura por proceso</h2><div>{groups.map(group => {const count = group.results.filter(item => item.result && item.result.status !== "UNASSESSED").length; return <div className="monitoring-progress-row" key={group.id}><span>{group.title}</span><progress aria-label={`Cobertura: ${group.title}`} value={count} max={group.results.length}/><b>{count}/{group.results.length}</b></div>;})}</div><small>Criterios con resultado registrado, incluido «No aplica».</small></article>
     </div>}
     <div className="monitoring-detail-heading"><h2>Lista de verificación</h2><span>Consulta los criterios y hallazgos de cada proceso</span></div>
-    {filtered?.length === 0 ? <p className="monitoring-notice" role="status">No hay monitoreos para estos filtros.</p> : <div className="monitoring-groups">{groups.map((group) => {
+    {filtered?.length === 0 ? <p className="monitoring-notice" role="status">No hay monitoreos para estos filtros.</p> : <div className="monitoring-unified"><div className="monitoring-process-buttons" role="group" aria-label="Elegir proceso">{groups.map(group => <button type="button" key={group.id} aria-pressed={activeGroup === group.id} onClick={() => setActiveGroup(group.id)}>{group.title}<span>{group.results.length}</span></button>)}</div>{groups.filter(group => group.id === activeGroup).map((group) => {
       const visible = group.results.filter((item) => !status || (item.result?.status ?? "UNASSESSED") === status);
-      if (!visible.length) return null;
-      return <details className="monitoring-group" key={group.id} open><summary><strong>{group.title}</strong><span>{visible.length} criterios</span></summary><div className="monitoring-group-content">
+      return <div key={group.id} className="monitoring-selected-process" aria-label={group.title}><div className="monitoring-table-heading"><h3>{group.title}</h3><span>{visible.length} criterios visibles</span></div><div className="monitoring-group-content">
         {(group.saved?.fields?.length || fieldLabels[group.id]) && <dl className="monitoring-fields">{(group.saved?.fields?.length ? group.saved.fields : (fieldLabels[group.id] ?? []).map((label) => ({label, value: ""}))).map((field, index) => <div key={index}><dt>{field.label}</dt><dd>{field.value || "No registrado"}</dd></div>)}</dl>}
-        <ul className="monitoring-criteria">{visible.map((item) => <li key={item.index}><div className="monitoring-criterion-heading"><span>{item.label}</span><span className={`monitoring-result monitoring-result--${item.result?.status ?? "UNASSESSED"}`}>{statuses[item.result?.status ?? "UNASSESSED"]}</span></div>{item.result?.status === "FAIL" && <p className="monitoring-treatment"><strong>Tratamiento: </strong>{item.result.treatments?.length ? item.result.treatments.map((treatment) => treatments[treatment]).join(" · ") : "No registrado"}</p>}{item.result?.observations && <p className="monitoring-remark">{item.result.observations}</p>}</li>)}</ul>
+        <div className="monitoring-table-scroll"><table className="monitoring-checklist"><caption className="sr-only">Criterios de {group.title}</caption><thead><tr><th>Criterio de verificación</th><th>Resultado</th><th>Tratamiento</th><th>Observaciones</th></tr></thead><tbody>{visible.map(item => <tr key={item.index}><td>{item.label}</td><td><span className={`monitoring-result monitoring-result--${item.result?.status ?? "UNASSESSED"}`}>{statuses[item.result?.status ?? "UNASSESSED"]}</span></td><td>{item.result?.status === "FAIL" ? (item.result.treatments?.length ? item.result.treatments.map(treatment => treatments[treatment]).join(" · ") : "No registrado") : "—"}</td><td>{item.result?.observations || "Sin observaciones"}</td></tr>)}</tbody></table></div>
+        {!visible.length && <p className="monitoring-notice" role="status">No hay criterios con este resultado en este proceso.</p>}
         <div className="monitoring-group-observations"><strong>Observaciones del bloque</strong><p>{group.saved?.observations || "Sin observaciones registradas"}</p></div>
-      </div></details>;
-    })}{status && !all.some((item) => (item.result?.status ?? "UNASSESSED") === status) && <p className="monitoring-notice">No hay criterios con este resultado.</p>}</div>}
+      </div></div>;
+    })}</div>}
     <footer className="monitoring-footer"><div><strong>Director de vivero</strong><p>{selected?.director || "No registrado"}</p><small>El nombre no sustituye una firma.</small></div><div><strong>Observaciones generales</strong><p>{selected?.observations || "Sin observaciones registradas"}</p></div></footer>
   </section>;
 }

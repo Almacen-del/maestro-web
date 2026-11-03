@@ -15,7 +15,11 @@ const records: readonly MonitoringRecord[] = [
 it("presenta seis bloques y 19 criterios sin inventar evaluaciones ni importar historia", () => {
   render(<MonitoringSection />);
   expect(monitoringTemplate.flatMap((group) => group.criteria)).toHaveLength(19);
-  expect(screen.getAllByText("Sin evaluar", {selector: ".monitoring-result"})).toHaveLength(19);
+  expect(screen.getAllByText("Sin evaluar", {selector: ".monitoring-result"})).toHaveLength(3);
+  expect(screen.getAllByRole("table")).toHaveLength(1);
+  expect(within(screen.getByRole("group", {name: "Elegir proceso"})).getAllByRole("button")).toHaveLength(6);
+  fireEvent.click(screen.getByRole("button", {name: /Riego/}));
+  expect(screen.getAllByText("Sin evaluar", {selector: ".monitoring-result"})).toHaveLength(2);
   expect(screen.getByText("Vista previa · conexión pendiente")).toBeInTheDocument();
   expect(screen.getAllByText("—", {selector: "strong"})).toHaveLength(4);
 });
@@ -24,6 +28,7 @@ it("separa no aplica de sin evaluar, conserva tratamientos y filtra resultados",
   render(<MonitoringSection records={records} />);
   fireEvent.change(screen.getByLabelText("Fecha"), {target: {value: "2026-08-01"}});
   const summary = screen.getByLabelText("Resumen del registro completo");
+  fireEvent.click(screen.getByRole("button", {name: /Riego/}));
   expect(within(summary).getByText("16")).toBeInTheDocument();
   expect(screen.getByText("Corrección")).toBeInTheDocument();
   expect(screen.getByText("200 ml")).toBeInTheDocument();
@@ -37,9 +42,11 @@ it("separa no aplica de sin evaluar, conserva tratamientos y filtra resultados",
 
 it("conserva el campo de origen de septiembre y distingue filtros vacíos", () => {
   render(<MonitoringSection records={records} />);
+  fireEvent.click(screen.getByRole("button", {name: /Trasplante/}));
   expect(screen.getByText("100 ml")).toBeInTheDocument();
   expect(screen.getByText("Director de prueba")).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("Responsable"), {target: {value: "Responsable A"}});
+  fireEvent.click(screen.getByRole("button", {name: /Riego/}));
   expect(screen.getByText("200 ml")).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("Fecha"), {target: {value: "2026-09-11"}});
   expect(screen.getByText("No hay monitoreos para estos filtros.")).toBeInTheDocument();

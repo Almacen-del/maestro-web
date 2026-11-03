@@ -1,4 +1,18 @@
 .monitoring-section {max-width:1500px;margin:auto;padding:28px;color:#204d38}
+.monitoring-unified{background:#fff;border:1px solid #d6e5dc;border-radius:10px;overflow:hidden}
+.monitoring-process-buttons{display:flex;flex-wrap:wrap;gap:8px;padding:14px;background:#edf5f0;border-bottom:1px solid #d6e5dc}
+.monitoring-process-buttons button{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #ccded2;border-radius:7px;background:#fff;color:#315c44;cursor:pointer;font:600 12px Arial,sans-serif}
+.monitoring-process-buttons button:hover{background:#e0efe5}
+.monitoring-process-buttons button[aria-pressed=true]{background:#196f49;border-color:#196f49;color:#fff;box-shadow:0 2px 5px #164a2820}
+.monitoring-process-buttons button span{border-radius:10px;background:#ffffff30;padding:2px 6px}
+.monitoring-table-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px}
+.monitoring-table-heading h3{margin:0;font-size:16px}.monitoring-table-heading>span{font-size:12px;color:#657b6d}
+.monitoring-table-scroll{overflow:auto}.monitoring-checklist{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+.monitoring-checklist caption{text-align:left;font-size:11px;color:#657b6d;padding:0 0 10px}
+.monitoring-checklist th{background:#edf4f0;font-size:11px;color:#4c6657;padding:12px}
+.monitoring-checklist td{padding:16px 12px;vertical-align:top;border-bottom:1px solid #e6eee8;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.monitoring-checklist td:first-child{width:40%;min-width:220px}.monitoring-checklist td:nth-child(2){white-space:nowrap}.monitoring-checklist tbody tr:hover{background:#f7faf8}
+@media(max-width:650px){.monitoring-process-buttons{gap:6px;padding:10px}.monitoring-process-buttons button{flex:1 1 140px;justify-content:space-between}.monitoring-table-heading{align-items:start;flex-direction:column}.monitoring-checklist{min-width:620px}}
 .monitoring-heading {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
 .monitoring-heading h1 {font:500 2.3rem/1.15 Georgia,serif;margin:8px 0}
 .monitoring-heading p {margin:6px 0}
