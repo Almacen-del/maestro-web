@@ -7,6 +7,7 @@ const records: MonitoringRecord[] = [
 ];
 it("pagina varios registros y filtra por proceso y responsable", () => {
   render(<MonitoringSection records={records}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Historial"}));
   expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(26);
   fireEvent.click(screen.getByRole("button",{name:"Siguiente"}));
   expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(14);
@@ -23,6 +24,7 @@ it("pagina varios registros y filtra por proceso y responsable", () => {
 });
 it("no inventa registros y aplica rango de fechas", () => {
   render(<MonitoringSection records={records}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Historial"}));
   fireEvent.change(screen.getByLabelText("Desde"),{target:{value:"2027-01-01"}});
   expect(screen.getByText("No hay monitoreos para estos filtros.")).toBeInTheDocument();
   expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(1);
