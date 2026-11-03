@@ -2,6 +2,7 @@ import {OfficialExport} from "./OfficialExport";
 import {applicationPages} from "./officialExportMappings";
 import {useState} from "react";
 import "./applications.css";
+import "./applications-agro.css";
 
 /** Presentation contract only: no remote collection or Android API is assumed. */
 export interface ApplicationRecord {
@@ -34,6 +35,9 @@ export function ApplicationsSection({records}: {readonly records?: readonly Appl
   const [location, setLocation] = useState("");
   const [type, setType] = useState("");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState("overview");
+  const [detailId, setDetailId] = useState<string>();
+  const [limit, setLimit] = useState(10);
   const choices = (field: "location" | "applicationType") => [...new Set(records?.map((record) => record[field]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es", {numeric: true}));
   const selected = records?.filter((record) => (!month || record.date.startsWith(month)) && (!location || record.location === location) && (!type || record.applicationType === type) && normalize([record.product, record.activeIngredient, record.executor, record.beds, record.lines, record.objective].join(" ")).includes(normalize(search))).slice().sort((a, b) => b.date.localeCompare(a.date));
   const summaries = [
@@ -42,9 +46,18 @@ export function ApplicationsSection({records}: {readonly records?: readonly Appl
     {label: "Ubicaciones", value: selected && new Set(selected.map((record) => record.location)).size},
     {label: "Ejecutores", value: selected && new Set(selected.map((record) => record.executor).filter(Boolean)).size},
   ];
-  return <section className="applications-section" aria-labelledby="applications-title"><OfficialExport kind="applications" disabled={!(selected)} build={sheets => applicationPages(sheets, selected ?? [])}/>
+  const counts = [...new Set(selected?.map(record => record.applicationType || "Sin tipo"))].map(label => ({label, count: selected?.filter(record => (record.applicationType || "Sin tipo") === label).length ?? 0}));
+  const days = [...new Set(selected?.map(record => record.date))].sort().slice(-7).map(date => ({date, count: selected?.filter(record => record.date === date).length ?? 0}));
+  const maxDay = Math.max(1,...days.map(day => day.count));
+  const colors = ["#2b8164","#e3a247","#517ca1","#a18baf","#8caa6d"];
+  let angle = 0;
+  const segments = counts.map((item,index) => {const start = angle; angle += item.count / (selected?.length || 1) * 360; return `${colors[index % colors.length]} ${start}deg ${angle}deg`;});
+  return <section className="applications-section agro-dashboard" aria-labelledby="applications-title"><OfficialExport kind="applications" disabled={!selected?.length} build={sheets => applicationPages(sheets, selected ?? [])}/>
     <header className="applications-heading"><div><p className="eyebrow">CUIDADO DEL VIVERO · PV-F-001</p><h1 id="applications-title">Control de aplicaciones</h1><p>Productos, ubicaciones y responsables de cada registro.</p></div><span className="applications-badge">{records === undefined ? "Conexión pendiente" : "Solo consulta"}</span></header>
-    <div className="applications-summary" aria-label="Resumen de registros filtrados">{summaries.map((item) => <article key={item.label}><span>{item.label}</span><strong>{item.value?.toLocaleString("es-CO") ?? "—"}</strong></article>)}</div>
+    <div className="agro-view-tabs" role="group" aria-label="Vista de aplicaciones"><button aria-pressed={view === "overview"} onClick={() => setView("overview")}>Vista general</button><button aria-pressed={view === "history"} onClick={() => setView("history")}>Historial de aplicaciones</button></div>
+    {view === "overview" && <><div className="agro-banner"><div><small>CUIDADO Y TRAZABILIDAD</small><h2>Cada aplicación, un cuidado para el vivero.</h2><p>Consulta productos, dosis y responsables en un solo lugar.</p></div><div className="agro-banner-number"><strong>{selected?.length.toLocaleString("es-CO") ?? "—"}</strong><span>registros en la selección</span></div></div>
+    <div className="applications-summary" aria-label="Resumen de registros filtrados">{summaries.map((item,index) => <article key={item.label}><span>{item.label}<i aria-hidden="true">{["▤","✿","⌖","♧"][index]}</i></span><strong>{item.value?.toLocaleString("es-CO") ?? "—"}</strong><small>Según los filtros actuales</small></article>)}</div>
+    <div className="agro-analytics"><article><h2>Actividad registrada</h2><p>Últimas siete fechas con registros · no representa plantas únicas</p><div className="agro-bars">{days.map(day => <div className="agro-bar-column" key={day.date}><b>{day.count}</b><div className="agro-bar-track"><div style={{height:`${day.count/maxDay*100}%`}}/></div><small>{dateLabel(day.date).slice(0,5)}</small></div>)}{!days.length && <p>Sin registros para graficar.</p>}</div></article><article><h2>Tipos de aplicación</h2><p>Distribución de registros, no cobertura de líneas</p><div className="agro-distribution"><div className="agro-donut" style={{background:segments.length ? `conic-gradient(${segments.join(",")})` : "#e7eeea"}}><span><strong>{selected?.length ?? "—"}</strong><small>registros</small></span></div><ul>{counts.map((item,index) => <li key={item.label}><i style={{background:colors[index % colors.length]}}/><span>{item.label}</span><b>{Math.round(item.count/(selected?.length || 1)*100)}%</b></li>)}</ul></div></article></div></>}
     <div className="applications-filters">
       <label>Mes<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label>
       <label>Módulo / germinador / jardín<select value={location} onChange={(event) => setLocation(event.target.value)}><option value="">Todas las ubicaciones</option>{choices("location").map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -52,7 +65,8 @@ export function ApplicationsSection({records}: {readonly records?: readonly Appl
       <label className="applications-search">Buscar<input type="search" placeholder="Producto, ingrediente, ejecutor o línea" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
       <button className="button button--secondary" type="button" onClick={() => {setMonth(""); setLocation(""); setType(""); setSearch("");}}>Limpiar filtros</button>
     </div>
-    {records === undefined ? <div className="applications-empty" role="status"><h2>Aplicaciones registradas desde el celular</h2><p>La vista está preparada. Los registros aparecerán cuando se conecte la aplicación Android.</p><p>El Excel se usó como formato de referencia; su historial no se ha importado.</p></div> : selected?.length === 0 ? <p className="applications-empty" role="status">No hay registros para estos filtros.</p> : <div className="applications-list">{selected?.map((record) => <details className="application-card" key={record.id}>
+    <div className="agro-history"><h2>Historial de intervenciones</h2><p>Productos registrados y trazabilidad operativa</p><div className="agro-table-scroll"><table><thead><tr>{["Fecha / ubicación","Producto / tipo","Responsable","Agua por registro","Detalle"].map(label => <th key={label}>{label}</th>)}</tr></thead><tbody>{selected?.slice(0,limit).map(record => <tr key={record.id}><td><strong>{dateLabel(record.date)}</strong><small>{record.location} {record.lines ? `· Líneas ${record.lines}` : ""}</small></td><td><strong>{record.product}</strong><small>{record.applicationType}</small></td><td>{record.executor || "No registrado"}</td><td>{quantity(record.waterLiters,"L")}</td><td><button aria-label={`Ver detalle ${record.id}`} aria-expanded={detailId === record.id} onClick={() => setDetailId(detailId === record.id ? undefined : record.id)}>Ver detalle ↗</button></td></tr>)}</tbody></table></div><footer><span>{Math.min(limit,selected?.length ?? 0)} de {selected?.length ?? 0} registros</span>{(selected?.length ?? 0)>limit && <button onClick={() => setLimit(limit+10)}>Mostrar 10 más</button>}</footer></div>
+    {records === undefined ? <div className="applications-empty" role="status"><h2>Aplicaciones registradas desde el celular</h2><p>La vista está preparada. Los registros aparecerán cuando se conecte la aplicación Android.</p><p>El Excel se usó como formato de referencia; su historial no se ha importado.</p></div> : selected?.length === 0 ? <p className="applications-empty" role="status">No hay registros para estos filtros.</p> : <div className="applications-list">{selected?.filter(record => record.id === detailId).map((record) => <details className="application-card" key={record.id} open>
       <summary><span className="application-date">{dateLabel(record.date)}<small>{record.time || "Hora no registrada"}</small></span><span className="application-product"><strong>{record.product}</strong><small>{record.location}{record.beds ? ` · Camas: ${record.beds}` : ""}{record.lines ? ` · Líneas: ${record.lines}` : ""}</small></span><span className="applications-badge">{record.applicationType || "Tipo no registrado"}</span><span className="application-executor">{record.executor || "Ejecutor no registrado"}</span></summary>
       <div className="application-detail"><dl>
         <div><dt>Ingrediente activo</dt><dd>{record.activeIngredient || "No registrado"}</dd></div>

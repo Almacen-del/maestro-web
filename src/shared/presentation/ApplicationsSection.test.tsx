@@ -30,11 +30,13 @@ it("filtra por mes, ubicación, tipo y ejecutor y permite limpiar", () => {
 
 it("conserva unidades, no aplica, cero y separa ejecutor de quien registra", () => {
   render(<ApplicationsSection records={records} />);
+  fireEvent.click(screen.getByRole("button", {name: "Ver detalle one"}));
   expect(screen.getByText("0,5 ml/L")).toBeInTheDocument();
-  expect(screen.getByText("60 L")).toBeInTheDocument();
+  expect(screen.getAllByText("60 L")).toHaveLength(2);
   expect(screen.getByText("30 ml")).toBeInTheDocument();
-  expect(screen.getByText("0 g")).toBeInTheDocument();
-  expect(screen.getAllByText("No aplica")).toHaveLength(2);
   expect(screen.getByText("Usuario B")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", {name: "Ver detalle two"}));
+  expect(screen.getByText("0 g")).toBeInTheDocument();
+  expect(screen.getAllByText("No aplica")).toHaveLength(3);
   expect(screen.getByText("No disponible")).toBeInTheDocument();
 });
