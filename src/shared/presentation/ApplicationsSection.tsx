@@ -3,6 +3,7 @@ import {applicationPages} from "./officialExportMappings";
 import {useState} from "react";
 import "./applications.css";
 import "./applications-agro.css";
+import "./applications-compact.css";
 
 /** Presentation contract only: no remote collection or Android API is assumed. */
 export interface ApplicationRecord {
@@ -45,6 +46,8 @@ export function ApplicationsSection({records}: {readonly records?: readonly Appl
     {label: "Productos distintos", value: selected && new Set(selected.map((record) => normalize(record.product))).size},
     {label: "Ubicaciones", value: selected && new Set(selected.map((record) => record.location)).size},
     {label: "Ejecutores", value: selected && new Set(selected.map((record) => record.executor).filter(Boolean)).size},
+    {label: "Tipos de aplicación", value: selected && new Set(selected.map(record => record.applicationType).filter(Boolean)).size},
+    {label: "Con observaciones", value: selected?.filter(record => record.observations?.trim()).length},
   ];
   const counts = [...new Set(selected?.map(record => record.applicationType || "Sin tipo"))].map(label => ({label, count: selected?.filter(record => (record.applicationType || "Sin tipo") === label).length ?? 0}));
   const days = [...new Set(selected?.map(record => record.date))].sort().slice(-7).map(date => ({date, count: selected?.filter(record => record.date === date).length ?? 0}));
@@ -55,7 +58,7 @@ export function ApplicationsSection({records}: {readonly records?: readonly Appl
   return <section className="applications-section agro-dashboard" aria-labelledby="applications-title"><OfficialExport kind="applications" disabled={!selected?.length} build={sheets => applicationPages(sheets, selected ?? [])}/>
     <header className="applications-heading"><div><p className="eyebrow">CUIDADO DEL VIVERO · PV-F-001</p><h1 id="applications-title">Control de aplicaciones</h1><p>Productos, ubicaciones y responsables de cada registro.</p></div><span className="applications-badge">{records === undefined ? "Conexión pendiente" : "Solo consulta"}</span></header>
     <div className="agro-view-tabs" role="group" aria-label="Vista de aplicaciones"><button aria-pressed={view === "overview"} onClick={() => setView("overview")}>Vista general</button><button aria-pressed={view === "history"} onClick={() => setView("history")}>Historial de aplicaciones</button></div>
-    {view === "overview" && <><div className="agro-banner"><div><small>CUIDADO Y TRAZABILIDAD</small><h2>Cada aplicación, un cuidado para el vivero.</h2><p>Consulta productos, dosis y responsables en un solo lugar.</p></div><div className="agro-banner-number"><strong>{selected?.length.toLocaleString("es-CO") ?? "—"}</strong><span>registros en la selección</span></div></div>
+    {view === "overview" && <>
     <div className="applications-summary" aria-label="Resumen de registros filtrados">{summaries.map((item,index) => <article key={item.label}><span>{item.label}<i aria-hidden="true">{["▤","✿","⌖","♧"][index]}</i></span><strong>{item.value?.toLocaleString("es-CO") ?? "—"}</strong><small>Según los filtros actuales</small></article>)}</div>
     <div className="agro-analytics"><article><h2>Actividad registrada</h2><p>Últimas siete fechas con registros · no representa plantas únicas</p><div className="agro-bars">{days.map(day => <div className="agro-bar-column" key={day.date}><b>{day.count}</b><div className="agro-bar-track"><div style={{height:`${day.count/maxDay*100}%`}}/></div><small>{dateLabel(day.date).slice(0,5)}</small></div>)}{!days.length && <p>Sin registros para graficar.</p>}</div></article><article><h2>Tipos de aplicación</h2><p>Distribución de registros, no cobertura de líneas</p><div className="agro-distribution"><div className="agro-donut" style={{background:segments.length ? `conic-gradient(${segments.join(",")})` : "#e7eeea"}}><span><strong>{selected?.length ?? "—"}</strong><small>registros</small></span></div><ul>{counts.map((item,index) => <li key={item.label}><i style={{background:colors[index % colors.length]}}/><span>{item.label}</span><b>{Math.round(item.count/(selected?.length || 1)*100)}%</b></li>)}</ul></div></article></div></>}
     <div className="applications-filters">
