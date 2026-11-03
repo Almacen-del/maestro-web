@@ -15,6 +15,9 @@ it("muestra el responsable guardado por línea sin inventar responsables ni conf
   render(<InventorySection repository={repository} />);
   expect(await screen.findByText("Responsable móvil")).toBeInTheDocument();
   expect(screen.getByText("Registrada")).toBeInTheDocument();
+  expect(screen.getByRole("heading", {name: "Composición del inventario"})).toBeInTheDocument();
+  expect(screen.getByRole("heading", {name: "Plantas por ubicación"})).toBeInTheDocument();
+  expect(screen.getByText("1 pendientes")).toBeInTheDocument();
   expect(screen.getByText("Sin contar")).toBeInTheDocument();
   expect(screen.getByText("No disponible", {selector: "td"})).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", {name: "Ver detalle de Línea registrada"}));
