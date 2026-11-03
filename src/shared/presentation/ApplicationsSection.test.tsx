@@ -7,19 +7,16 @@ const records: readonly ApplicationRecord[] = [
   {id: "two", date: "2026-08-03", location: "Jardín clonal", product: "Producto de prueba B", dosePerLiter: "NOT_APPLICABLE", unit: "g", waterLiters: "NOT_APPLICABLE", totalDose: 0, applicationType: "Edáfica", executor: "Ejecutor C"},
 ];
 
-it("presenta los 15 campos oficiales en la planilla y conserva cero y no aplica", () => {
+it("adapta el historial principal sin añadir una planilla", () => {
   render(<ApplicationsSection records={records} />);
-  fireEvent.click(screen.getByRole("button", {name: "Planilla PV-F-001"}));
+  expect(screen.queryByRole("button", {name: "Planilla PV-F-001"})).not.toBeInTheDocument();
   const table = screen.getByRole("table");
-  expect(within(table).getAllByRole("columnheader")).toHaveLength(16);
-  for (const name of ["Hora de aplicación", "Cama", "Línea", "Unidad (ml/g)", "Objetivo del insumo", "Observaciones"]) {
-    expect(within(table).getByRole("columnheader", {name})).toBeInTheDocument();
-  }
-  expect(within(table).getByText("0")).toBeInTheDocument();
-  expect(within(table).getAllByText("No aplica")).toHaveLength(2);
-  expect(within(table).getByText("0,5")).toBeInTheDocument();
-  fireEvent.click(within(table).getByRole("button", {name: "Ver detalle one"}));
-  expect(screen.getByText("Usuario B")).toBeInTheDocument();
+  expect(within(table).getAllByRole("columnheader")).toHaveLength(5);
+  expect(within(table).getByText("0,5 ml/L")).toBeInTheDocument();
+  expect(within(table).getByText("Producto: 0 g")).toBeInTheDocument();
+  expect(within(table).getByText("Ingrediente de prueba")).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Buscar"), {target: {value: "Observación de prueba"}});
+  expect(within(table).queryByText("Producto de prueba B")).not.toBeInTheDocument();
 });
 
 it("distingue la conexión pendiente de una consulta sin resultados", () => {
@@ -46,8 +43,8 @@ it("filtra por mes, ubicación, tipo y ejecutor y permite limpiar", () => {
 it("conserva unidades, no aplica, cero y separa ejecutor de quien registra", () => {
   render(<ApplicationsSection records={records} />);
   fireEvent.click(screen.getByRole("button", {name: "Ver detalle one"}));
-  expect(screen.getByText("0,5 ml/L")).toBeInTheDocument();
-  expect(screen.getAllByText("60 L")).toHaveLength(2);
+  expect(within(screen.getByRole("complementary", {name: "Detalle de la intervención"})).getByText("0,5 ml/L")).toBeInTheDocument();
+  expect(screen.getByText("60 L")).toBeInTheDocument();
   expect(screen.getByText("30 ml")).toBeInTheDocument();
   expect(screen.getByText("Usuario B")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", {name: "Ver detalle two"}));
