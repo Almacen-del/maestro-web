@@ -31,8 +31,32 @@ export function monitoringPages(sheets:SheetTemplate[],record:MonitoringRecord):
  return [{name:`monitoreo-${record.id}`,cells:{[s.path]:cells}}];
 }
 export function inventoryPages(sheets:SheetTemplate[],catalog:ManageableCatalogData,lines:readonly ManageableCatalogLine[]):ExportPage[]{
- const locations=new Map(catalog.locations.map(l=>[l.id,l]));const grouped=new Map<SheetTemplate,{line:ManageableCatalogLine;bed:string}[]>();
- for(const line of lines){let loc=locations.get(line.locationId);let bed='';let module='';const seen=new Set<string>();while(loc&&!seen.has(loc.id)){seen.add(loc.id);if(loc.type==='CAMA')bed=loc.code||loc.displayName;if(['MODULO','GERMINADOR'].includes(loc.type))module=loc.type==='GERMINADOR'?'G'+(loc.code.match(/\d+/)?.[0]??''): 'MODULO '+(loc.code.match(/\d+/)?.[0]??'');loc=loc.parentId?locations.get(loc.parentId):undefined;}const sheet=sheets.find(s=>s.name===module);if(!sheet)throw new Error(`La ubicación de ${line.displayName} no existe en el formato original.`);grouped.set(sheet,[...(grouped.get(sheet)??[]),{line,bed}]);}
- const pages:ExportPage[]=[];const max=Math.max(0,...[...grouped].map(([s,rows])=>Math.ceil(rows.length/s.capacity!)));
- for(let page=0;page<max;page++){const all:ExportPage['cells']={};for(const [s,rows] of grouped){const chunk=rows.slice(page*s.capacity!,(page+1)*s.capacity!);const cells:Cells={};const first=s.column===1;cells[first?'B6':'C5']=s.name;const dates=chunk.map(({line})=>line.inventory?.updatedAt?.slice(0,10)).filter((v):v is string=>Boolean(v)).sort();cells[first?'D6':'E5']=excelDate(dates[0]);cells[first?'F6':'G5']=excelDate(dates.at(-1));cells[first?'H6':'I5']=[...new Set(chunk.map(({line})=>line.inventory?.actorDisplayName).filter(Boolean))].join(', ');chunk.forEach(({line,bed},i)=>row(cells,s.start!+i,[excelDate(line.inventory?.updatedAt),bed,line.code,line.inventory?.rootstocks,line.inventory?.females,line.inventory?.males,null,[line.inventory?.actorDisplayName?`Registrado por: ${line.inventory.actorDisplayName}`:'',line.inventory?.initialDeadPlants!=null?`Muertas del inventario inicial: ${line.inventory.initialDeadPlants}`:'',!line.inventory?'Sin inventario registrado':''].filter(Boolean).join('\n')],s.column));for(let i=0;i<4;i++)cells[`${columns(s.column!+3,4)[i]}${s.totalRow}`]=i===3?null:chunk.reduce((n,{line})=>n+(line.inventory?.[(['rootstocks','females','males'] as const)[i]!]??0),0);all[s.path]=cells;}pages.push({name:'inventario',cells:all});}return pages;
+ const locations=new Map(catalog.locations.map(l=>[l.id,l]));
+ const grouped=new Map<string,{sheet:SheetTemplate;rows:{line:ManageableCatalogLine;bed:string}[]}>();
+ for(const line of lines){
+  let loc=locations.get(line.locationId);let bed='';let module='';const seen=new Set<string>();
+  while(loc&&!seen.has(loc.id)){seen.add(loc.id);if(loc.type==='CAMA')bed=loc.code.match(/\d+/)?.[0]??loc.displayName;
+   if(['MODULO','GERMINADOR'].includes(loc.type))module=loc.type==='GERMINADOR'?'G'+(loc.code.match(/\d+/)?.[0]??''):'MODULO '+(loc.code.match(/\d+/)?.[0]??'');
+   loc=loc.parentId?locations.get(loc.parentId):undefined;
+  }
+  // Reuse the original germinator layout on separate pages; never merge G2 and G3.
+  const sheet=sheets.find(s=>s.name===module)??(/^G\d+$/.test(module)?sheets.find(s=>/^G\d+$/.test(s.name)):undefined);
+  if(!sheet)throw new Error(`La ubicación de ${line.displayName} no existe en el formato original.`);
+  const group=grouped.get(module)??{sheet,rows:[]};group.rows.push({line,bed});grouped.set(module,group);
+ }
+ const periods=[...new Set(lines.map(l=>l.inventory?.sourcePeriod).filter(Boolean))];
+ const name=periods.length===1?`inventario-${periods[0]}`:'inventario';
+ const pages:ExportPage[]=[];
+ for(const [module,{sheet:s,rows}] of grouped)for(let offset=0;offset<rows.length;offset+=s.capacity!){
+  const chunk=rows.slice(offset,offset+s.capacity!);const cells:Cells={};const first=s.column===1;
+  const dateOf=(line:ManageableCatalogLine)=>line.inventory?.countedOn??line.inventory?.updatedAt;
+  cells[first?'B6':'C5']=module;
+  const dates=chunk.map(({line})=>dateOf(line)?.slice(0,10)).filter((v):v is string=>Boolean(v)).sort();
+  cells[first?'D6':'E5']=excelDate(dates[0]);cells[first?'F6':'G5']=excelDate(dates.at(-1));
+  cells[first?'H6':'I5']=[...new Set(chunk.map(({line})=>line.inventory?.actorDisplayName).filter(Boolean))].join(', ');
+  chunk.forEach(({line,bed},i)=>row(cells,s.start!+i,[excelDate(dateOf(line)),bed,line.code.replace(/^L/i,''),line.inventory?.rootstocks,line.inventory?.females,line.inventory?.males,line.inventory?.initialDeadPlants,[line.inventory?.observations,line.inventory?.actorDisplayName?`Registrado por: ${line.inventory.actorDisplayName}`:'',!line.inventory?'Sin inventario registrado':''].filter(Boolean).join('\n')],s.column));
+  for(let i=0;i<4;i++)cells[`${columns(s.column!+3,4)[i]}${s.totalRow}`]=chunk.reduce((n,{line})=>n+(line.inventory?.[(['rootstocks','females','males','initialDeadPlants'] as const)[i]!]??0),0);
+  let page=pages.find(p=>!p.cells[s.path]);if(!page){page={name,cells:{}};pages.push(page);}page.cells[s.path]=cells;
+ }
+ return pages;
 }

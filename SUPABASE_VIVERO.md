@@ -60,3 +60,16 @@ La entrada con contraseña real debe comprobarla el titular de la cuenta; las pr
 
 La revisión de seguridad no reportó alertas para las tablas Vivero. El análisis de rendimiento solo indicó [índices nuevos todavía sin uso](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index), normal al comenzar vacío; se conservan para las consultas y claves foráneas.
 Almacén puede seguir recibiendo movimientos de sus propios usuarios durante una verificación. Esta migración no escribe en sus tablas ni intenta revertir actividad concurrente.
+
+## Cortes históricos de inventario
+
+- `vivero_inventory_periods`: mes del conteo, huella SHA-256 del Excel, controles de filas/vivas/muertas y manifiesto de origen. Solo se publica un corte cuando todos sus controles coinciden.
+- `vivero_inventory_history`: una fila por corte y línea, con ubicación de ese momento, cantidades, fecha real, responsable del documento, hoja, fila y celdas originales. Los cortes publicados son inmutables. El usuario eligió las cantidades de Excel sobre las de los PDF físicos.
+- `vivero_inventory_effective`: vista `security_invoker` que combina el último corte publicado con los conteos vivos de igual o posterior fecha. No suma meses ni arrastra líneas ausentes desde cortes anteriores. La cuenta de importación no sustituye al responsable histórico.
+- `vivero_inventory_counts` conserva por separado los futuros envíos de inventario operativo. Los archivos históricos no se hacen pasar por envíos nuevos del celular.
+
+El selector del módulo Inventario permite consultar y exportar cada corte por separado. Las fechas del Excel exportado son las del conteo, no las de importación. Germinadores distintos que usan la misma hoja de plantilla salen en archivos separados, conservando el formato original.
+
+Preparación local: `scripts/prepare-inventory-history.py archivo.zip directorio-privado`. El script es de solo lectura sobre el ZIP. Genera datos normalizados y SQL transaccional con comprobación de duplicados y del catálogo existente. Los archivos generados contienen datos reales: mantenerlos fuera de Git y de `public/`. Ejecutar únicamente sobre el proyecto autorizado de Supabase y revisar antes los controles y el mes de cada corte. Los encabezados se normalizan a las fechas de las filas, y G3 conserva su identidad aunque un encabezado copiado diga G2.
+
+Prueba breve con reversión: `supabase/tests/vivero_imported_inventory.sql` (controles específicos de la primera importación). Comprueba prioridad del Excel, fechas, inmutabilidad, ausencia frente a cero, precedencia de conteos posteriores y aislamiento de no miembros/anon.

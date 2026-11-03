@@ -2,12 +2,15 @@ import {createClient, type SupabaseClient} from "@supabase/supabase-js";
 import type {ManageableCatalogData, ManageableCatalogInventory, MonitorUser, ProductionLotSummary} from "../domain/MonitorModels";
 import type {DocumentKind, NurseryDocument, NurseryRecords, NurseryRepository} from "../domain/NurseryRepository";
 import type {DailyActivity} from "../domain/DailyActivityContract";
+import type {InventoryPeriod} from "../domain/InventoryHistory";
 
-type Table = "vivero_locations" | "vivero_lines" | "vivero_inventory" | "vivero_lots" | "vivero_lot_lines" | "vivero_documents";
+type Table = "vivero_locations" | "vivero_lines" | "vivero_inventory_effective" | "vivero_inventory_periods" | "vivero_inventory_history" | "vivero_lots" | "vivero_lot_lines" | "vivero_documents";
 interface Stamp {id: string; version: number; updated_by: string; updated_at: string}
 interface LocationRow extends Stamp {parent_id: string | null; code: string; display_name: string; type: string; sort_order: number; active: boolean}
 interface LineRow extends Stamp {location_id: string; code: string; display_name: string; sort_order: number; active: boolean}
-interface InventoryRow extends Stamp {females: number; males: number; rootstocks: number; dead: number; total: number; responsible_name: string; counted_on: string}
+interface InventoryRow extends Stamp {females: number; males: number; rootstocks: number; dead: number; total: number; responsible_name: string; counted_on: string; origin?: string; source_period?: string; source_file?: string; source_sheet?: string; source_row?: number; observations?: string}
+interface HistoryRow extends InventoryRow {period_id: string; line_id: string; location_id: string}
+interface PeriodRow {id: string; source_file: string; first_counted_on: string; last_counted_on: string; expected_rows: number; expected_live: number; expected_dead: number}
 interface LotRow extends Stamp {lot_type: "SIEMBRA" | "INJERTACION"; month: string; active: boolean}
 interface LinkRow extends Stamp {lot_id: string; line_id: string}
 interface DocumentRow extends Stamp {kind: DocumentKind; record_date: string; payload: NurseryDocument}
@@ -77,7 +80,7 @@ export class SupabaseNurseryRepository implements NurseryRepository {
       timer = setTimeout(()=>{if(!disposed)onChange();},350);
     };
     const channel = this.client.channel("vivero-data");
-    for (const table of ["vivero_locations","vivero_lines","vivero_inventory","vivero_lots","vivero_lot_lines","vivero_documents"]) {
+    for (const table of ["vivero_locations","vivero_lines","vivero_inventory","vivero_inventory_periods","vivero_lots","vivero_lot_lines","vivero_documents"]) {
       channel.on("postgres_changes",{event:"*",schema:"public",table},changed);
     }
     channel.subscribe();
@@ -97,14 +100,14 @@ export class SupabaseNurseryRepository implements NurseryRepository {
     const timer = window.setInterval(onFocus,60_000);
     return () => {disposed = true; data.subscription.unsubscribe(); window.clearInterval(timer); window.removeEventListener("focus",onFocus);};
   }
-  private async rows<T>(table: Table, filters: Record<string,string> = {}): Promise<T[]> {
+  private async rows<T>(table: Table, filters: Record<string,string> = {}, columns = "*"): Promise<T[]> {
     const result: T[] = [];
     for (let offset = 0; ; offset += 500) {
-      let query = this.client.from(table).select("*").order("id").range(offset,offset + 499);
+      let query = this.client.from(table).select(columns).order("id").range(offset,offset + 499);
       for (const [key,value] of Object.entries(filters)) query = query.eq(key,value);
       const {data,error} = await query;
       if (error) fail("No fue posible consultar los datos de Vivero. Revisa la conexión y los permisos.");
-      result.push(...data as T[]);
+      result.push(...data as unknown as T[]);
       if (data.length < 500) return result;
     }
   }
@@ -117,8 +120,11 @@ export class SupabaseNurseryRepository implements NurseryRepository {
   }
   private async loadCatalog(): Promise<ManageableCatalogData> {
     const [locations,lines,inventory] = await Promise.all([
-      this.rows<LocationRow>("vivero_locations"), this.rows<LineRow>("vivero_lines"), this.rows<InventoryRow>("vivero_inventory"),
+      this.rows<LocationRow>("vivero_locations"), this.rows<LineRow>("vivero_lines"), this.rows<InventoryRow>("vivero_inventory_effective"),
     ]);
+    return this.catalogFromRows(locations,lines,inventory);
+  }
+  private catalogFromRows(locations: LocationRow[], lines: LineRow[], inventory: InventoryRow[]): ManageableCatalogData {
     const counts = new Map(inventory.map(row => [row.id,row]));
     return {
       locations: locations.map(row => ({id:row.id, code:row.code, type:row.type, parentId:row.parent_id ?? undefined,
@@ -128,12 +134,40 @@ export class SupabaseNurseryRepository implements NurseryRepository {
       lines: lines.map(row => {
         const stock = counts.get(row.id);
         const value: ManageableCatalogInventory | undefined = stock ? {females:stock.females,males:stock.males,rootstocks:stock.rootstocks,total:stock.total,
-          version:stock.version,origin:"SUPABASE",actorUserId:stock.updated_by,actorDisplayName:stock.responsible_name,
-          updatedAt:stock.updated_at,initialDeadPlants:stock.dead,initialSourceReference:stock.counted_on} : undefined;
+          version:stock.version,origin:stock.origin??"SUPABASE",actorUserId:stock.updated_by,actorDisplayName:stock.responsible_name,
+          updatedAt:stock.updated_at,initialDeadPlants:stock.dead,initialSourceReference:stock.counted_on,
+          countedOn:stock.counted_on,sourcePeriod:stock.source_period,sourceFile:stock.source_file,sourceSheet:stock.source_sheet,
+          sourceRow:stock.source_row,observations:stock.observations} : undefined;
         return {id:row.id,locationId:row.location_id,code:row.code,displayName:row.display_name,order:row.sort_order,
           active:row.active,version:row.version,occupiedByActiveJourney:false,draftSelectionCount:0,inventory:value};
       }),
     };
+  }
+  async listInventoryPeriods(): Promise<readonly InventoryPeriod[]> {
+    const periods = await this.rows<PeriodRow>("vivero_inventory_periods",{published:"true"},"id,source_file,first_counted_on,last_counted_on,expected_rows,expected_live,expected_dead");
+    return periods.sort((a,b)=>b.id.localeCompare(a.id)).map(p=>({id:p.id,sourceFile:p.source_file,firstCountedOn:p.first_counted_on,
+      lastCountedOn:p.last_counted_on,records:p.expected_rows,live:p.expected_live,dead:p.expected_dead}));
+  }
+  async listHistoricalInventory(period: string): Promise<ManageableCatalogData> {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) fail("Período inválido.");
+    const periods = await this.listInventoryPeriods();
+    const selected = periods.find(p=>p.id===period);
+    if (!selected) fail("El corte solicitado no está disponible.");
+    const [locations,lines,history] = await Promise.all([
+      this.rows<LocationRow>("vivero_locations"),this.rows<LineRow>("vivero_lines"),
+      this.rows<HistoryRow>("vivero_inventory_history",{period_id:period},"id,period_id,line_id,location_id,females,males,rootstocks,dead,total,counted_on,responsible_name,observations,source_sheet,source_row,version,updated_by,updated_at"),
+    ]);
+    if (history.length!==selected.records || history.reduce((n,h)=>n+h.total,0)!==selected.live || history.reduce((n,h)=>n+h.dead,0)!==selected.dead) fail("No se pudo cargar el corte completo. Actualiza e intenta de nuevo.");
+    const counts = new Map(history.map(h=>[h.line_id,h]));
+    const places = new Map(locations.map(l=>[l.id,l]));
+    const historicalLines = lines.filter(l=>counts.has(l.id)).map(l=>{
+      const location = places.get(counts.get(l.id)!.location_id);
+      // An old germinator sheet may not specify a bed; do not copy a later bed label into it.
+      const display_name = location?.type==="GERMINADOR" ? `${location.display_name} · Línea ${l.code.replace(/^L/i,"")}` : l.display_name;
+      return {...l,location_id:counts.get(l.id)!.location_id,display_name,active:true};
+    });
+    if (historicalLines.length!==history.length) fail("Faltan líneas del corte histórico.");
+    return this.catalogFromRows(locations,historicalLines,history.map(h=>({...h,id:h.line_id,origin:"HISTORICO",source_period:period,source_file:selected.sourceFile})));
   }
   async listManageableLots(): Promise<readonly ProductionLotSummary[]> {
     const [lots,links,catalog] = await Promise.all([this.rows<LotRow>("vivero_lots"),this.rows<LinkRow>("vivero_lot_lines"),this.listManageableCatalog(true)]);

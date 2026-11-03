@@ -6,7 +6,10 @@ function setup(data: Record<string,unknown[]>) {
   const fetcher=vi.fn(async(input: RequestInfo|URL)=>{
     const url=new URL(typeof input==="string"?input:input instanceof URL?input.href:input.url);
     const table=url.pathname.split("/").at(-1)!;
-    return new Response(JSON.stringify(data[table]??[]),{status:200,headers:{"Content-Type":"application/json"}});
+    let rows=data[table]??[];
+    for(const [key,value] of url.searchParams)if(value.startsWith("eq."))rows=rows.filter(row=>String((row as Record<string,unknown>)[key])===value.slice(3));
+    const offset=Number(url.searchParams.get("offset")??0),limit=Number(url.searchParams.get("limit")??500);
+    return new Response(JSON.stringify(rows.slice(offset,offset+limit)),{status:200,headers:{"Content-Type":"application/json"}});
   });
   const client=createClient("https://gfgsnnweyfryfcqdnlvw.supabase.co","sb_publishable_test",{
     auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:crypto.randomUUID()},global:{fetch:fetcher},
@@ -19,7 +22,7 @@ describe("Repositorio Vivero",()=>{
       vivero_locations:[{id:"bed",code:"C1",display_name:"Cama 1",type:"CAMA",sort_order:1,active:true,version:1}],
       vivero_lines:[{id:"L1",location_id:"bed",code:"L1",display_name:"Línea 1",sort_order:1,active:true,version:1},
         {id:"L2",location_id:"bed",code:"L2",display_name:"Línea 2",sort_order:2,active:true,version:1}],
-      vivero_inventory:[{id:"L1",females:0,males:0,rootstocks:0,total:0,dead:2,responsible_name:"Responsable",updated_by:"user",updated_at:"2026-11-03",version:1}],
+      vivero_inventory_effective:[{id:"L1",females:0,males:0,rootstocks:0,total:0,dead:2,responsible_name:"Responsable",updated_by:"user",updated_at:"2026-11-03",version:1}],
     });
     const data=await repo.listManageableCatalog();
     expect(data.lines[0].inventory?.total).toBe(0);
@@ -42,5 +45,23 @@ describe("Repositorio Vivero",()=>{
   it("rechaza documentos malformados",()=>{
     expect(()=>validateDocument("DAILY",{id:"x",date:"2026-11-03"} as never)).toThrow("diario inválido");
     expect(()=>validateDocument("MONITORING",{id:"x",date:"2026-11-03",responsible:"A",groups:[{id:"watering",criteria:[{index:0,status:"FALSE_PASS"}]}]} as never)).toThrow("Monitoreo inválido");
+  });
+  it("lee solo el corte solicitado y conserva fecha, responsable, cero y origen",async()=>{
+    const {repo,fetcher}=setup({
+      vivero_inventory_periods:[{id:"2026-04",published:true,source_file:"original.xlsx",expected_rows:1,expected_live:0,expected_dead:2}],
+      vivero_locations:[{id:"G3",code:"G3",display_name:"Germinador 3",type:"GERMINADOR",active:true}],
+      vivero_lines:[{id:"L1",code:"L1",location_id:"bed-new",display_name:"Línea 1",active:false}],
+      vivero_inventory_history:[{id:"2026-04:L1",period_id:"2026-04",line_id:"L1",location_id:"G3",females:0,males:0,rootstocks:0,total:0,dead:2,counted_on:"2026-04-08",responsible_name:"Responsable original",updated_by:"importer",updated_at:"2026-11-03",source_sheet:"G3",source_row:10,version:1},
+        {id:"other",period_id:"2026-09",line_id:"L1",total:9}],
+    });
+    const result=await repo.listHistoricalInventory("2026-04");
+    expect(result.lines).toHaveLength(1);
+    expect(result.lines[0]).toMatchObject({active:true,locationId:"G3",inventory:{total:0,initialDeadPlants:2,countedOn:"2026-04-08",actorDisplayName:"Responsable original",sourceFile:"original.xlsx",sourcePeriod:"2026-04",sourceRow:10}});
+    expect(fetcher.mock.calls.some(([input])=>String(input).includes("period_id=eq.2026-04"))).toBe(true);
+  });
+  it("rechaza cortes incompletos en lugar de mostrar totales parciales como completos",async()=>{
+    const {repo}=setup({vivero_inventory_periods:[{id:"2026-04",published:true,expected_rows:2,expected_live:9,expected_dead:0}]});
+    await expect(repo.listHistoricalInventory("2026-04")).rejects.toThrow("corte completo");
+    await expect(repo.listHistoricalInventory("2026-13")).rejects.toThrow("Período inválido");
   });
 });

@@ -3,6 +3,7 @@ import type {DailyActivity} from "./DailyActivityContract";
 import type {ApplicationRecord} from "../presentation/ApplicationsSection";
 import type {MonitoringRecord} from "../presentation/MonitoringSection";
 import type {GraftingRecord} from "../presentation/GraftingSection";
+import type {InventoryHistoryRepository} from "./InventoryHistory";
 
 export interface NurseryRecords {
   readonly activities: readonly DailyActivity[];
@@ -15,7 +16,7 @@ export type NurseryDocument = DailyActivity | ApplicationRecord | MonitoringReco
 export type NurseryRepository = Pick<MonitorRepository,
   "environment" | "emulatorEnabled" | "signIn" | "signOut" | "restoreSession" |
   "observeAccountStatus" | "listManageableCatalog" | "listManageableLots" | "listDailyActivities"
-> & {
+> & Partial<InventoryHistoryRepository> & {
   listNurseryRecords?(kind?: DocumentKind): Promise<NurseryRecords>;
   observeDataChanges?(onChange: () => void): () => void;
   saveDocument?(kind: DocumentKind, document: NurseryDocument, expectedVersion?: number): Promise<void>;

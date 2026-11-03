@@ -383,6 +383,12 @@ export interface ManageableCatalogInventory {
   readonly updatedAt: string;
   readonly initialSourceReference?: string;
   readonly initialDeadPlants?: number;
+  readonly countedOn?: string;
+  readonly sourcePeriod?: string;
+  readonly sourceFile?: string;
+  readonly sourceSheet?: string;
+  readonly sourceRow?: number;
+  readonly observations?: string;
 }
 
 export interface ManageableCatalogData {

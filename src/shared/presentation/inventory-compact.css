@@ -1,6 +1,12 @@
 .nursery-shell .inventory-preview.inventory-compact{width:100%;min-width:0;max-width:none;box-sizing:border-box;padding:16px 20px;background:#f5f8f7;color:#374d43;font-family:"Segoe UI",Arial,sans-serif}
 .nursery-shell .inventory-compact .inventory-preview-heading{border:0;padding:4px 0;margin:0 0 12px}
 .nursery-shell .inventory-compact h1{font-size:28px;letter-spacing:-1px}
+.inventory-periods{background:#edf5ef;border:1px solid #d3e5d9;border-radius:10px;padding:10px 12px;margin:8px 0 12px}
+.inventory-periods [role=group]{display:flex;flex-wrap:wrap;gap:7px}
+.inventory-periods button{border:1px solid #b8d3c2;border-radius:7px;background:#fff;color:#23543b;padding:7px 13px;font:600 12px "Segoe UI",sans-serif;cursor:pointer;text-transform:capitalize}
+.inventory-periods button[aria-pressed=true]{background:#196b48;color:#fff;border-color:#196b48}
+.inventory-periods button:focus-visible{outline:3px solid #82b8dc;outline-offset:2px}
+.inventory-periods p{font-size:11px;color:#4e6d5d;margin:8px 0 0}
 .nursery-shell .inventory-compact h2{font:650 14px "Segoe UI",Arial,sans-serif;margin:0;color:#153629}
 .nursery-shell .inventory-compact .inventory-summary-cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0}
 .nursery-shell .inventory-compact .inventory-summary-cards>article{background:linear-gradient(140deg,#fff,#fbfdfc);border:1px solid #e1e9e4;border-radius:11px;padding:12px;gap:3px;box-shadow:0 3px 10px #153b2804;min-height:80px}

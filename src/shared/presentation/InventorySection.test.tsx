@@ -1,7 +1,26 @@
-import {fireEvent, render, screen} from "@testing-library/react";
+import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {expect, it, vi} from "vitest";
 import {DisabledMonitorRepository} from "../data/FirebaseMonitorRepository";
 import {InventorySection} from "./InventorySection";
+
+it("cambia de corte sin acumular meses y vuelve al inventario actual", async()=>{
+  const snapshot=(total:number)=>({locations:[],lines:[{id:"a",active:true,code:"L1",displayName:"Línea histórica",inventory:{total,rootstocks:total,females:0,males:0,countedOn:"2026-04-08",actorDisplayName:"Responsable original"}}]});
+  const repository=Object.assign(new DisabledMonitorRepository(),{
+    listManageableCatalog:vi.fn().mockResolvedValue(snapshot(30)),
+    listInventoryPeriods:vi.fn().mockResolvedValue([{id:"2026-09",records:1,live:30,dead:0},{id:"2026-04",records:1,live:10,dead:0}]),
+    listHistoricalInventory:vi.fn().mockResolvedValue(snapshot(10)),
+  });
+  render(<InventorySection repository={repository}/>);
+  await screen.findByText("30 plantas visibles");
+  fireEvent.click(screen.getByRole("button",{name:"abril de 2026"}));
+  await screen.findByText("10 plantas visibles");
+  expect(repository.listHistoricalInventory).toHaveBeenCalledWith("2026-04");
+  expect(screen.queryByText("40 plantas visibles")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"Ver detalle de Línea histórica"}));
+  expect(screen.getByText(/^8\/0?4\/2026$/,{selector:"dd"})).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:/^Actual$/}));
+  await waitFor(()=>expect(screen.getByText("30 plantas visibles")).toBeInTheDocument());
+});
 
 it("muestra el responsable guardado por línea sin inventar responsables ni confundir cero con sin contar", async () => {
   const repository = Object.assign(new DisabledMonitorRepository(), {
