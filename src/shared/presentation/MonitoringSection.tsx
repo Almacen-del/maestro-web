@@ -2,6 +2,7 @@ import {OfficialExport} from "./OfficialExport";
 import {monitoringPages} from "./officialExportMappings";
 import {useState} from "react";
 import "./monitoring.css";
+import {MonitoringMatrix} from "./MonitoringMatrix";
 
 export const monitoringTemplate = [
   {id: "weeding", title: "Deshierbe y guadaña", criteria: ["Limpieza de la maleza en las bolsas", "Limpieza de los pasillos", "Limpieza de los alrededores de los módulos"]},
@@ -46,6 +47,10 @@ export interface MonitoringRecord {
 const dateLabel = (date: string) => date.split("-").reverse().join("/");
 
 export function MonitoringSection({records}: {readonly records?: readonly MonitoringRecord[]}) {
+  return <MonitoringMatrix records={records}/>;
+}
+
+export function MonitoringDetail({records}: {readonly records?: readonly MonitoringRecord[]}) {
   const [date, setDate] = useState("");
   const [responsible, setResponsible] = useState("");
   const [recordId, setRecordId] = useState("");

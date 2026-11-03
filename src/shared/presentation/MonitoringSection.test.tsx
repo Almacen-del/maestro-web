@@ -1,6 +1,6 @@
 import {fireEvent, render, screen, within} from "@testing-library/react";
 import {expect, it} from "vitest";
-import {MonitoringSection, monitoringTemplate, type MonitoringRecord} from "./MonitoringSection";
+import {MonitoringDetail as MonitoringSection, monitoringTemplate, type MonitoringRecord} from "./MonitoringSection";
 
 const records: readonly MonitoringRecord[] = [
   {id: "a", date: "2026-08-01", responsible: "Responsable A", groups: [
