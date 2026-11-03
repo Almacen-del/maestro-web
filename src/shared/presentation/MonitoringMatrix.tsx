@@ -2,6 +2,7 @@ import {useState} from "react";
 import {MonitoringDetail, monitoringTemplate, type MonitoringRecord} from "./MonitoringSection";
 import "./monitoring-matrix.css";
 import "./monitoring-compact.css";
+import "./monitoring-dialog.css";
 
 const labels = {PASS: "Cumple", FAIL: "No cumple", NOT_APPLICABLE: "No aplica", UNASSESSED: "Sin evaluar"};
 const treatments = {CORRECTION: "Corrección", RETURN: "Separación o devolución", CONCESSION: "Separación y autorización bajo concesión"};
@@ -22,13 +23,14 @@ export function MonitoringMatrix({records}: {readonly records?: readonly Monitor
   const pages = Math.max(1, Math.ceil(rows.length / 25));
   const current = Math.min(page, pages - 1);
   const change = (setter: (value: string) => void, value: string) => {setter(value); setPage(0);};
-  if (detail) return <><button className="button button--secondary" onClick={() => setDetailId(undefined)}>← Volver a la matriz</button><MonitoringDetail records={[detail]}/></>;
+  const detailDialog = detail ? <dialog className="monitoring-record-dialog" aria-label="Ficha de monitoreo" ref={node => {if(node && !node.open) node.showModal();}} onCancel={() => setDetailId(undefined)} onClick={event => {if(event.target === event.currentTarget) setDetailId(undefined);}}><div className="monitoring-dialog-content"><header><div><strong>Ficha de monitoreo</strong><small>{detail.date.split("-").reverse().join("/")} · {detail.responsible || "Responsable no registrado"}</small></div><button type="button" aria-label="Cerrar ficha" onClick={() => setDetailId(undefined)}>Cerrar ×</button></header><MonitoringDetail key={detail.id} records={[detail]}/></div></dialog> : null;
   const periodRecords = (records ?? []).filter(record => (!from || record.date >= from) && (!to || record.date <= to)).slice().sort((a,b) => b.date.localeCompare(a.date));
   const scored = (record: MonitoringRecord) => monitoringTemplate.reduce((sum,group) => sum + group.criteria.filter((_,index) => {const answer = record.groups.find(item => item.id === group.id)?.criteria.find(item => item.index === index); return answer && answer.status !== "UNASSESSED";}).length,0);
   const totalScored = periodRecords.reduce((sum,record) => sum + scored(record),0);
   const daily = [...new Set(periodRecords.map(record => record.date))].sort().slice(-14).map(date => ({date,count:periodRecords.filter(record => record.date === date).reduce((sum,record) => sum + scored(record),0)}));
   const maximum = Math.max(1,...daily.map(day => day.count));
   if(view === "overview") return <section className="monitoring-section compact-monitor" aria-labelledby="compact-monitor-title">
+    {detailDialog}
     <header className="compact-monitor-header"><div><p className="eyebrow">ARLES · PV-F-010</p><h1 id="compact-monitor-title">Monitoreo del vivero</h1></div><span>Solo consulta</span></header>
     <div className="compact-monitor-toolbar"><div role="group" aria-label="Vistas de monitoreo"><button aria-pressed="true" onClick={() => setView("overview")}>Resumen</button><button aria-pressed="false" onClick={() => setView("history")}>Historial</button></div><label>Desde<input type="date" value={from} onChange={e => change(setFrom,e.target.value)}/></label><label>Hasta<input type="date" value={to} onChange={e => change(setTo,e.target.value)}/></label></div>
     <div className="compact-monitor-kpis">{[["Fichas del período",periodRecords.length,"Registros recibidos"],["Con evaluación",periodRecords.filter(record => scored(record)>0).length,"Al menos un criterio calificado"],["Criterios calificados",totalScored,"Incluye No aplica"],["Sin evaluar",periodRecords.length*19-totalScored,"Sin calificación registrada"]].map(([label,value,note]) => <article key={label}><span>{label}</span><strong>{records === undefined ? "—" : value}</strong><small>{note}</small></article>)}</div>
@@ -37,6 +39,7 @@ export function MonitoringMatrix({records}: {readonly records?: readonly Monitor
     {records === undefined && <p role="status" className="compact-monitor-note">Conexión pendiente: no hay registros disponibles. Los datos del HTML no se han importado.</p>}
   </section>;
   return <section className="monitoring-section monitoring-matrix" aria-labelledby="matrix-title">
+    {detailDialog}
     <button className="button button--secondary" onClick={() => setView("overview")}>← Volver al resumen</button>
     <header className="monitoring-heading"><div><p className="eyebrow">PV-F-010 · CONTROL DEL VIVERO</p><h1 id="matrix-title">Matriz de monitoreo</h1><p>Historial de criterios, resultados y observaciones por fecha y responsable.</p></div><span className="monitoring-mode">Solo consulta</span></header>
     <div className="monitoring-filters"><label>Buscar<input value={search} onChange={e => change(setSearch,e.target.value)} placeholder="Responsable, proceso, criterio…"/></label><label>Desde<input type="date" value={from} onChange={e => change(setFrom,e.target.value)}/></label><label>Hasta<input type="date" value={to} onChange={e => change(setTo,e.target.value)}/></label><label>Resultado<select value={result} onChange={e => change(setResult,e.target.value)}><option value="">Todos los resultados</option>{Object.entries(labels).map(([key,label]) => <option key={key} value={key}>{label}</option>)}</select></label><button className="button button--secondary" onClick={() => {setSearch("");setFrom("");setTo("");setProcess("");setResult("");setPage(0);}}>Limpiar filtros</button></div>

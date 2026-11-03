@@ -1,5 +1,6 @@
 import {fireEvent, render, screen, within} from "@testing-library/react";
-import {expect, it} from "vitest";
+import {beforeAll, expect, it} from "vitest";
+beforeAll(() => {HTMLDialogElement.prototype.showModal = function () {this.setAttribute("open", "");};});
 import {MonitoringSection, type MonitoringRecord} from "./MonitoringSection";
 const records: MonitoringRecord[] = [
   {id:"a",date:"2026-08-01",responsible:"Ana",groups:[{id:"watering",criteria:[{index:0,status:"FAIL",observations:"Revisar riego"}]}]},
@@ -19,7 +20,9 @@ it("pagina varios registros y filtra por proceso y responsable", () => {
   expect(screen.getByText("Revisar riego")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button",{name:"Ver registro / exportar"}));
   expect(screen.getByText("Monitoreo de vivero")).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button",{name:/Volver a la matriz/}));
+  expect(screen.getByRole("dialog",{name:"Ficha de monitoreo"})).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"Cerrar ficha"}));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.getByLabelText("Buscar")).toHaveValue("Ana");
 });
 it("no inventa registros y aplica rango de fechas", () => {
