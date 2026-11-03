@@ -1,4 +1,4 @@
-import {render,screen} from "@testing-library/react";
+import {fireEvent,render,screen} from "@testing-library/react";
 import {describe,it,expect} from "vitest";
 import {demoData} from "./DemoNursery";
 import {GeneralReportSection,summarizeCatalog} from "./GeneralReportSection";
@@ -21,5 +21,10 @@ describe("Informe general",()=>{
     expect(await screen.findByRole("rowheader", {name:"Módulo DEMO 1"})).toBeInTheDocument();
     expect(screen.getByRole("meter", {name:"Plantas en Módulo DEMO 1"})).toBeInTheDocument();
     expect(screen.getByText(/La conexión productiva/)).toBeInTheDocument();
+    expect(screen.getByText("Fuente operativa pendiente de conexión.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name:"Atención prioritaria"})).toBeInTheDocument();
+    const first=demoData.catalog.lines[0]!;
+    fireEvent.click(screen.getByRole("button", {name:`Consultar ${first.displayName}`}));
+    expect(screen.getByText(`${first.displayName} · ${first.inventory!.total.toLocaleString("es-CO")} plantas vivas`)).toBeInTheDocument();
   });
 });

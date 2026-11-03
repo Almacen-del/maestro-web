@@ -6,6 +6,7 @@ import type {ApplicationRecord} from "./ApplicationsSection";
 import type {MonitoringRecord} from "./MonitoringSection";
 import type {GraftingRecord} from "./GraftingSection";
 import "./general-report.css";
+import "./report-compact.css";
 
 interface Records {activities:readonly DailyActivity[];applications:readonly ApplicationRecord[];monitoring:readonly MonitoringRecord[];grafting:readonly GraftingRecord[]}
 export function summarizeCatalog(catalog:ManageableCatalogData) {
@@ -25,6 +26,8 @@ export function summarizeCatalog(catalog:ManageableCatalogData) {
   return [...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,"es",{numeric:true}));
 }
 export function GeneralReportSection({repository,records,demo=false}:{readonly repository:MonitorRepository;readonly records?:Records;readonly demo?:boolean}) {
+  const [chartSource,setChartSource]=useState<"activities"|"applications"|"monitoring"|"grafting">("activities");
+  const [lineId,setLineId]=useState<string>();
   const [catalog,setCatalog]=useState<ManageableCatalogData>();const [error,setError]=useState(false);const [refresh,setRefresh]=useState(0);const [month,setMonth]=useState("");
   useEffect(()=>{let active=true;setCatalog(undefined);setError(false);void repository.listManageableCatalog(refresh===0).then(value=>{if(active)setCatalog(value);}).catch(()=>{if(active)setError(true);});return()=>{active=false;};},[repository,refresh]);
   const groups=catalog?summarizeCatalog(catalog):[];
@@ -35,16 +38,26 @@ export function GeneralReportSection({repository,records,demo=false}:{readonly r
   const cards=[{label:"Procesos diarios",value:operations?.activities.length},{label:"Aplicaciones",value:operations?.applications.length},{label:"Monitoreos",value:operations?.monitoring.length},{label:"Registros de injertos",value:operations?.grafting.filter(r=>r.formType==="PV_F008_INJERTACION").length},{label:"Registros de yemas",value:operations?.grafting.filter(r=>r.formType==="PV_F007_YEMAS").length}];
   const failures=operations?.monitoring.reduce((n,r)=>n+r.groups.reduce((a,g)=>a+g.criteria.filter(c=>c.status==="FAIL").length,0),0);
   const exportReport=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({demo,generatedAt:new Date().toISOString(),inventoryScope:"Inventario actual, no histórico",operationMonth:month||null,inventory:groups,operations:operations??null},null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download=`${demo?"DEMO-":""}informe-general.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-  return <section className="general-report" aria-labelledby="general-report-title">
+  const chartRecords=operations?.[chartSource];
+  const dates=[...new Set(chartRecords?.map(record=>record.date))].sort().slice(-7).map(date=>({date,count:chartRecords?.filter(record=>record.date===date).length??0}));
+  const maxCount=Math.max(1,...dates.map(item=>item.count));
+  const activeLines=catalog?.lines.filter(line=>line.active)??[];
+  const selectedLine=activeLines.find(line=>line.id===lineId);
+  return <section className="general-report report-compact" aria-labelledby="general-report-title">
     <header className="general-report-heading"><div><small>ARLES S.A.S. · {demo?"DEMOSTRACIÓN":"VIVERO"}</small><h1 id="general-report-title">Informe general</h1><p>Una mirada al inventario y a la actividad del vivero.</p></div><button type="button" onClick={()=>setRefresh(r=>r+1)}>Actualizar</button></header>
     {error?<p role="alert">No fue posible consultar el inventario. Intenta actualizar.</p>:!catalog?<p role="status">Consultando inventario…</p>:null}
     <h2>Inventario actual</h2><p>No cambia con el filtro de mes. Las cantidades corresponden a líneas activas con inventario registrado.</p>
     <div className="general-report-kpis">{([['total','Plantas vivas'],['females','Hembras'],['males','Machos'],['rootstocks','Patrones']] as const).map(([field,label])=><article key={field}><span>{label}</span><strong>{catalog && sum("lines")===sum("missing")?"—":display(sum(field))}</strong></article>)}</div>
     {catalog && <p>{sum("lines")} líneas activas · {sum("empty")} vacías · {sum("missing")} sin inventario registrado{sum("missing")>0?". Totales parciales: faltan líneas por registrar.":"."}</p>}
+    <div className="report-executive-row">
+      <article className="report-surface"><div className="report-card-heading"><div><h2>Evolución de registros</h2><p>Últimas siete fechas con actividad · según el mes seleccionado</p></div><select aria-label="Indicador de evolución" value={chartSource} onChange={event=>setChartSource(event.target.value as typeof chartSource)}><option value="activities">Procesos diarios</option><option value="applications">Aplicaciones</option><option value="monitoring">Monitoreo</option><option value="grafting">Injertos y yemas</option></select></div><div className="report-timeline">{dates.map(item=><div key={item.date}><strong>{item.count}</strong><div><i style={{height:`${item.count/maxCount*100}%`}}/></div><small>{item.date.slice(5).split("-").reverse().join("/")}</small></div>)}{!dates.length&&<p>{operations?"Sin registros para este período.":"Fuente operativa pendiente de conexión."}</p>}</div></article>
+      <article className="report-surface"><div className="report-card-heading"><div><h2>Estado del inventario por línea</h2><p>Catálogo actual · resumen esquemático, no ubicación geográfica</p></div></div><div className="report-line-grid">{activeLines.map(line=><button key={line.id} title={line.displayName} aria-label={`Consultar ${line.displayName}`} aria-pressed={lineId===line.id} className={!line.inventory?"unregistered":line.inventory.total===0?"empty":"registered"} onClick={()=>setLineId(line.id)}>{line.code}</button>)}</div><div className="report-line-legend"><span>Verde: con plantas</span><span>Ámbar: vacía</span><span>Gris: sin inventario</span></div><p className="report-line-caption">{selectedLine ? `${selectedLine.displayName} · ${selectedLine.inventory ? selectedLine.inventory.total.toLocaleString("es-CO")+" plantas vivas" : "Sin inventario registrado"}` : "Selecciona una línea para consultar su existencia."}</p></article>
+    </div>
     <div className="general-report-overview">
     <div className="general-report-table"><table><caption>Distribución por módulo</caption><thead><tr>{["Módulo","Líneas","Hembras","Machos","Patrones","Total vivo","Sin registro"].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{groups.map(row=><tr key={row.name}><th scope="row">{row.name}</th><td>{row.lines}</td>{(["females","males","rootstocks","total"] as const).map(key=><td key={key}>{row.lines===row.missing?"—":row[key].toLocaleString("es-CO")}</td>)}<td>{row.missing}</td></tr>)}</tbody></table></div>
     <aside className="general-report-distribution" aria-label="Resumen visual del inventario"><h2>Plantas por módulo</h2><PercentBars values={groups.map(row=>[row.name,row.lines===row.missing?undefined:row.total] as const)} unit="plantas registradas" labelPrefix="Plantas en "/>{!catalog && <p>Esperando inventario.</p>}<small>Existencias registradas; no representa productividad.</small></aside>
     </div>
+    <div className="report-attention report-surface"><h2>Atención prioritaria</h2><div>{catalog&&<><article className={sum("missing")?"warning":""}><strong>{sum("missing")} líneas sin inventario</strong><small>{sum("missing")?"El consolidado es parcial hasta completar estos registros.":"Todas las líneas activas tienen inventario."}</small></article><article><strong>{sum("empty")} líneas vacías</strong><small>Existencias registradas en cero; no son datos faltantes.</small></article></>}{operations?<article className={failures?"warning":""}><strong>{failures} criterios no conformes</strong><small>Monitoreo del período; no equivale a casos únicos.</small></article>:<article className="warning"><strong>Fuentes operativas pendientes</strong><small>Sin datos conectados de procesos, aplicaciones, monitoreo e injertación.</small></article>}</div></div>
     <div className="general-report-period"><h2>Actividad registrada</h2><label>Mes de actividad <input aria-label="Mes de actividad" type="month" value={month} onChange={e=>setMonth(e.target.value)}/></label><button type="button" onClick={()=>setMonth("")}>Todos los meses</button></div>
     {!records && <p>La conexión productiva de estos registros está pendiente. No se muestran ceros como si no hubiera actividad.</p>}
     <div className="general-report-kpis">{cards.map(card=><article key={card.label}><span>{card.label}</span><strong>{card.value??"—"}</strong></article>)}</div>
