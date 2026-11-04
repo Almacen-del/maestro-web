@@ -17,6 +17,19 @@ function setup(data: Record<string,unknown[]>) {
   return {repo:new SupabaseNurseryRepository(client),fetcher,client};
 }
 describe("Repositorio Vivero",()=>{
+  it("lee las 1133 filas históricas publicadas sin truncar y consulta por fecha",async()=>{
+    const history=Array.from({length:1133},(_,i)=>({id:`h${i}`,record_date:i<2?"2026-11-03":"2026-01-01",published:true,payload:{id:`h${i}`,date:i<2?"2026-11-03":"2026-01-01",title:"Riego",start:"",end:"",location:"M1",collaborators:["Colaborador"],notes:"",quantity:i===0?undefined:0}}));
+    const {repo,fetcher}=setup({vivero_daily_history:[...history,{...history[0],id:"not-published",published:false}]});
+    const all=await repo.listNurseryRecords("DAILY");
+    expect(all.activities).toHaveLength(1133);
+    expect(all.activities[0]?.quantity).toBeUndefined();
+    expect(all.activities[1]?.quantity).toBe(0);
+    expect(all.activities[0]?.recordedByName).toBeUndefined();
+    expect(await repo.listDailyActivities("2026-11-03")).toHaveLength(2);
+    fetcher.mockClear();
+    await repo.listNurseryRecords("APPLICATIONS");
+    expect(fetcher.mock.calls.some(([url])=>String(url).includes("vivero_daily_history"))).toBe(false);
+  });
   it("integra históricos de monitoreo conservando responsable, fecha y criterios sin evaluar",async()=>{
     const payload={id:"historico-monitoreo-2026-06-08",date:"2026-06-08",responsible:"Responsable original",groups:[{id:"watering",criteria:[{index:0,status:"UNASSESSED"}]}]};
     const {repo,fetcher}=setup({vivero_monitoring_history:[{id:payload.id,record_date:payload.date,payload}]});

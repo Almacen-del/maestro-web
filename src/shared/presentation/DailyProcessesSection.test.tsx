@@ -1,8 +1,21 @@
-import {render, screen} from "@testing-library/react";
+import {render, screen, fireEvent, within} from "@testing-library/react";
 import {expect, it, vi} from "vitest";
 import {DisabledMonitorRepository} from "../data/FirebaseMonitorRepository";
 import type {MonitorRepository} from "../domain/MonitorModels";
 import {DailyProcessesSection} from "./DailyProcessesSection";
+
+it("permite consultar el histórico y filtrar fechas sin volver a descargarlo",async()=>{
+  const base={title:"Riego histórico",start:"",end:"",location:"M1",collaborators:["Ana"],notes:""};
+  const repository={listDailyActivities:vi.fn().mockResolvedValue([]),listNurseryRecords:vi.fn().mockResolvedValue({activities:[{...base,id:"old",date:"2026-01-01"},{...base,id:"recent",date:"2026-11-03"}]})};
+  render(<DailyProcessesSection repository={repository}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Histórico"}));
+  expect(await screen.findByText("03/11/2026")).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Desde procesos"),{target:{value:"2026-11-01"}});
+  expect(within(screen.getByRole("table")).queryByText("01/01/2026")).not.toBeInTheDocument();
+  expect(repository.listNurseryRecords).toHaveBeenCalledOnce();
+  fireEvent.change(screen.getByLabelText("Hasta procesos"),{target:{value:"2026-11-02"}});
+  expect(screen.getByRole("status")).toHaveTextContent("No hay actividades registradas para este período.");
+});
 
 it("informa que no existe conexión y no inventa actividades", () => {
   render(<DailyProcessesSection />);

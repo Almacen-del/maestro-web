@@ -9,7 +9,10 @@ const columns=(start:number,count:number)=>Array.from({length:count},(_,i)=>Stri
 const row=(cells:Cells,r:number,values:CellValue[],start=1)=>values.forEach((v,i)=>{cells[`${columns(start,values.length)[i]}${r}`]=v;});
 export function dailyPages(sheets:SheetTemplate[],items:readonly DailyActivity[]):ExportPage[]{
  const s=sheets[0]!;const pages:ExportPage[]=[];
- for(let offset=0;offset<items.length;offset+=s.capacity!){const cells:Cells={};items.slice(offset,offset+s.capacity!).forEach((a,i)=>row(cells,s.start!+i,[excelDate(a.date),a.collaborators.join(', '),a.title,a.start,a.end,a.location,null,null,null,a.quantity??a.plants,[a.notes,a.recordedByName?`Registrado por: ${a.recordedByName}`:'',a.unit?`Unidad: ${a.unit}`:'',a.workerDetails?.map(w=>`${w.name}: ${w.start}-${w.end}; cantidad ${w.quantity??'no registrada'}`).join('; ')].filter(Boolean).join('\n')]));pages.push({name:'procesos-diarios',cells:{[s.path]:cells}});}return pages;
+ for(let offset=0;offset<items.length;offset+=s.capacity!){const cells:Cells={};items.slice(offset,offset+s.capacity!).forEach((a,i)=>{
+   const original=a.source?.columns;
+   row(cells,s.start!+i,original ? [excelDate(a.date),...['B','C','D','E','F','G','H','I','J','K'].map(key=>original[key])] : [excelDate(a.date),a.collaborators.join(', '),a.title,a.start,a.end,a.location,null,null,null,a.quantity??a.plants,[a.notes,a.recordedByName?`Registrado por: ${a.recordedByName}`:'',a.unit?`Unidad: ${a.unit}`:'',a.workerDetails?.map(w=>`${w.name}: ${w.start}-${w.end}; cantidad ${w.quantity??'no registrada'}`).join('; ')].filter(Boolean).join('\n')]);
+ });pages.push({name:'procesos-diarios',cells:{[s.path]:cells}});}return pages;
 }
 export function applicationPages(sheets:SheetTemplate[],items:readonly ApplicationRecord[]):ExportPage[]{
  const s=sheets[0]!;const pages:ExportPage[]=[];const q=(v:number|'NOT_APPLICABLE'|undefined)=>v==='NOT_APPLICABLE'?'N/A':v;

@@ -6,6 +6,11 @@ import {fillTemplate,type SheetTemplate} from './OfficialExport';
 import {dailyPages,applicationPages,graftPages,monitoringPages,inventoryPages} from './officialExportMappings';
 import {demoData} from './DemoNursery';
 describe('Exportaciones oficiales',()=>{
+ it('exporta las once columnas originales del histórico sin convertir vacíos en cero',()=>{
+   const sheets=[{name:'2026',path:'sheet.xml',allowed:[],start:5,capacity:20}];
+   const [page]=dailyPages(sheets,[{id:'history',date:'2026-11-03',title:'Riego',start:'',end:'',location:'Módulo 1 · Cama 2',collaborators:['Ana'],notes:'',source:{file:'original.xlsx',sheet:'2026',row:7,columns:{B:'Ana',C:'riego',D:null,E:'12:10 p.m',F:'M1',G:2,H:24,I:1,J:null,K:'Observación original'}}}]);
+   expect(page?.cells['sheet.xml']).toMatchObject({B5:'Ana',C5:'riego',D5:null,F5:'M1',G5:2,H5:24,I5:1,J5:null,K5:'Observación original'});
+ });
  const manifest=JSON.parse(readFileSync('public/export-templates/manifest.json','utf8')) as Record<string,{sheets:SheetTemplate[]}>;
  const builds={daily:(s:SheetTemplate[])=>dailyPages(s,demoData.activities),applications:(s:SheetTemplate[])=>applicationPages(s,demoData.applications),monitoring:(s:SheetTemplate[])=>monitoringPages(s,demoData.monitoring[0]!),grafts:(s:SheetTemplate[])=>graftPages(s,demoData.grafting.find(r=>r.formType==='PV_F008_INJERTACION')!),buds:(s:SheetTemplate[])=>graftPages(s,demoData.grafting.find(r=>r.formType==='PV_F007_YEMAS')!),inventory:(s:SheetTemplate[])=>inventoryPages(s,demoData.catalog,demoData.catalog.lines)};
  for(const [kind,build] of Object.entries(builds))it(`rellena ${kind} preservando partes no editadas`,()=>{

@@ -14,6 +14,7 @@ export interface AndroidDailyDraft {
 }
 
 export interface DailyActivity {
+  readonly source?: {readonly file: string; readonly sheet: string; readonly row: number; readonly columns: Readonly<Record<string, string | number | null>>};
   readonly recordedByName?: string;
   readonly id: string;
   readonly title: string;
