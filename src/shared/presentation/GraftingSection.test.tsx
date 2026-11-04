@@ -9,6 +9,23 @@ const records: readonly GraftingRecord[] = [
     {id: "y2", collectionDate: "2026-09-03", lot: "15", line: "35", gender: "M", motherTree: "10", yemaQuantity: 0},
   ]},
 ];
+it("conserva las mediciones antiguas sin inventar cinco calificaciones pendientes",()=>{
+  render(<GraftingSection records={[{...records[0]!,samples:[{...records[0]!.samples[0]!,sourcePage:3,sourceLayout:"ROOTSTOCK_MEASUREMENTS",stemThicknessMm:6.8,graftCriteria:undefined}],source:{file:"original.pdf",sha256:"a".repeat(64),version:"001",pages:[3],layout:"ROOTSTOCK_MEASUREMENTS"}}]}/>);
+  expect(screen.queryByText("Sin evaluar")).not.toBeInTheDocument();
+  expect(screen.getByText("Muestra 1 · Pág. 3")).toBeInTheDocument();
+  expect(screen.getByText(/Grosor registrado: 6,8 mm/)).toBeInTheDocument();
+  expect(screen.getByText("Cumple",{selector:".grafting-result"})).toBeInTheDocument();
+  expect(screen.queryByRole("heading",{name:"Injerto",exact:true})).not.toBeInTheDocument();
+});
+it("las recolecciones antiguas no generan criterios ficticios y el total incompleto se identifica como subtotal",()=>{
+  const historical={...records[1]!,yemaCollections:records[1]!.yemaCollections.map((b,i)=>({...b,sourceLayout:"BUD_COLLECTIONS" as const,yemaQuantity:i?null:16})),source:{file:"original.pdf",sha256:"a".repeat(64),version:"001",pages:[1],layout:"BUD_COLLECTIONS" as const}};
+  render(<GraftingSection records={[historical]}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Yemas"}));
+  expect(screen.getByText("Yemas con cantidad legible (subtotal)")).toBeInTheDocument();
+  expect(screen.getByRole("status")).toHaveTextContent("1 recolecciones sin cantidad legible");
+  expect(screen.queryByText("Sin evaluar")).not.toBeInTheDocument();
+  expect(screen.getByText(/no contiene criterios de calificación/)).toBeInTheDocument();
+});
 it("separa ambos formatos y no inventa criterios ni registros", () => {
   render(<GraftingSection />);
   expect(screen.getByText("Conexión pendiente")).toBeInTheDocument();

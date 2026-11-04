@@ -17,6 +17,16 @@ function setup(data: Record<string,unknown[]>) {
   return {repo:new SupabaseNurseryRepository(client),fetcher,client};
 }
 describe("Repositorio Vivero",()=>{
+  it("carga injertos y yemas históricos publicados y admite fecha ausente solo al leer el histórico",async()=>{
+    const graft={id:"scan-graft",date:"",responsible:"",formType:"PV_F008_INJERTACION",samples:[],yemaCollections:[]};
+    const bud={...graft,id:"scan-bud",date:"2026-03-02",formType:"PV_F007_YEMAS"};
+    const {repo,fetcher}=setup({vivero_grafting_history:[{id:graft.id,payload:graft,published:true},{id:bud.id,payload:bud,published:true},{id:"hidden",payload:graft,published:false}]});
+    expect((await repo.listNurseryRecords("GRAFTING")).grafting).toEqual([graft,bud]);
+    expect(()=>validateDocument("GRAFTING",graft as never)).toThrow("fecha inválidos");
+    fetcher.mockClear();
+    await repo.listNurseryRecords("APPLICATIONS");
+    expect(fetcher.mock.calls.some(([url])=>String(url).includes("vivero_grafting_history"))).toBe(false);
+  });
   it("combina aplicaciones móviles e históricas publicadas conservando su origen",async()=>{
     const payload={id:"historical",date:"2026-07-07",product:"Producto original",location:"Módulo 1",applicationType:"Foliar",executor:"Ejecutor",dosePerLiter:"NOT_APPLICABLE",source:{file:"original.xlsx",sheet:"PV-F-001",row:5,columns:{H:"N.A"}}};
     const mobile={...payload,id:"mobile",source:undefined};

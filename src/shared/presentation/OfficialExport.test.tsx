@@ -6,6 +6,14 @@ import {fillTemplate,type SheetTemplate} from './OfficialExport';
 import {dailyPages,applicationPages,graftPages,monitoringPages,inventoryPages} from './officialExportMappings';
 import {demoData} from './DemoNursery';
 describe('Exportaciones oficiales',()=>{
+ it('exporta mediciones escaneadas como mediciones y conserva la página, sin inventar calificaciones',()=>{
+   const pages=graftPages([{name:'Formato',path:'sheet.xml',allowed:[]}],{id:'scan',date:'',responsible:'',formType:'PV_F008_INJERTACION',evaluatedSamplesCount:100,samples:[{id:'p36-r1',sampleNumber:1,module:'2',bed:'2',line:'37',treeAge:'1 año',stemThicknessMm:8.39,healthyCondition:'C',sourceLayout:'ROOTSTOCK_MEASUREMENTS',notes:'PDF página 36, fila 1.'}],yemaCollections:[]});
+   const cells=pages[0]!.cells['sheet.xml']!;
+   expect(cells.D5).toBe('');expect(cells.L5).toBe('');
+   expect(cells.D16).toBeUndefined();expect(cells.E16).toBeUndefined();expect(cells.F16).toBe('C');
+   expect(cells.G16).toContain('Grosor: 8.39 mm');expect(cells.G16).toContain('PDF página 36');
+   expect(cells.I16).toBeUndefined();
+ });
  it('exporta las quince columnas históricas de aplicaciones sin perder texto, ceros ni vacíos',()=>{
    const sheets=[{name:'PV-F-001',path:'sheet.xml',allowed:[],start:5,capacity:20}];
    const [page]=applicationPages(sheets,[{id:'history',date:'2026-07-22',product:'Producto',location:'Módulo 1',executor:'Ejecutor',applicationType:'Foliar',dosePerLiter:2,source:{file:'original.xlsx',sheet:'PV-F-001',row:22,columns:{B:'6:00 am',C:'M1',D:1.2,E:'6-12',F:'Producto original',G:null,H:'2 ml',I:'ml',J:0,K:'N.A',L:'Foliar',M:null,N:'Ejecutor original',O:'Nota original'}}}]);

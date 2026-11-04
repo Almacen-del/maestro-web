@@ -4,7 +4,7 @@ import type {DocumentKind, NurseryDocument, NurseryRecords, NurseryRepository} f
 import type {DailyActivity} from "../domain/DailyActivityContract";
 import type {InventoryPeriod} from "../domain/InventoryHistory";
 
-type Table = "vivero_locations" | "vivero_lines" | "vivero_inventory_effective" | "vivero_inventory_periods" | "vivero_inventory_history" | "vivero_lots" | "vivero_lot_lines" | "vivero_documents" | "vivero_monitoring_history" | "vivero_daily_history" | "vivero_applications_history";
+type Table = "vivero_locations" | "vivero_lines" | "vivero_inventory_effective" | "vivero_inventory_periods" | "vivero_inventory_history" | "vivero_lots" | "vivero_lot_lines" | "vivero_documents" | "vivero_monitoring_history" | "vivero_daily_history" | "vivero_applications_history" | "vivero_grafting_history";
 interface Stamp {id: string; version: number; updated_by: string; updated_at: string}
 interface LocationRow extends Stamp {parent_id: string | null; code: string; display_name: string; type: string; sort_order: number; active: boolean}
 interface LineRow extends Stamp {location_id: string; code: string; display_name: string; sort_order: number; active: boolean}
@@ -19,11 +19,11 @@ export const emptyNurseryRecords = (): NurseryRecords => ({activities: [], appli
 const disconnected = "La conexión con Supabase no está configurada.";
 function fail(message: string): never {throw new Error(message);}
 
-export function validateDocument(kind: DocumentKind, value: NurseryDocument): void {
+export function validateDocument(kind: DocumentKind, value: NurseryDocument, allowUndatedHistory = false): void {
   const r = value as unknown as Record<string, unknown>;
   const strings = (keys: string[]) => keys.every(key => typeof r[key] === "string");
   const nonnegative = (key: string) => r[key] == null || (typeof r[key] === "number" && Number.isFinite(r[key]) && r[key] >= 0);
-  if (!strings(["id", "date"]) || !r.id || !/^\d{4}-\d{2}-\d{2}$/.test(String(r.date))) fail("Identificador o fecha inválidos.");
+  if (!strings(["id", "date"]) || !r.id || (!/^\d{4}-\d{2}-\d{2}$/.test(String(r.date)) && !(allowUndatedHistory && kind === "GRAFTING" && r.date === ""))) fail("Identificador o fecha inválidos.");
   if (kind === "DAILY" && (!strings(["title","location","start","end","notes"]) || !Array.isArray(r.collaborators) || !r.collaborators.every(x => typeof x === "string") || !nonnegative("plants") || !nonnegative("quantity"))) fail("Proceso diario inválido.");
   if (kind === "APPLICATIONS" && !strings(["product","location","applicationType","executor"])) fail("Aplicación inválida.");
   if (kind === "MONITORING" && (!strings(["responsible"]) || !Array.isArray(r.groups) || !r.groups.every(g => g && typeof g.id === "string" && Array.isArray(g.criteria) && g.criteria.every((c: {index: number; status: string}) => Number.isInteger(c.index) && c.index >= 0 && ["PASS","FAIL","NOT_APPLICABLE","UNASSESSED"].includes(c.status))))) fail("Monitoreo inválido.");
@@ -195,10 +195,18 @@ export class SupabaseNurseryRepository implements NurseryRepository {
       const history = await this.rows<DocumentRow>("vivero_applications_history",{published:"true"},"id,record_date,payload");
       rows.push(...history.map(row => ({...row,kind:"APPLICATIONS" as const})));
     }
+    const historicalGraftIds = new Set<string>();
+    if (!kind || kind === "GRAFTING") {
+      const history = await this.rows<DocumentRow>("vivero_grafting_history",{published:"true"},"id,record_date,payload");
+      for (const row of history) {
+        historicalGraftIds.add(row.id);
+        rows.push({...row,kind:"GRAFTING"});
+      }
+    }
     const records = {activities:[] as DailyActivity[],applications:[] as NurseryRecords["applications"][number][],
       monitoring:[] as NurseryRecords["monitoring"][number][],grafting:[] as NurseryRecords["grafting"][number][]};
     for (const row of rows) {
-      validateDocument(row.kind,row.payload);
+      validateDocument(row.kind,row.payload,historicalGraftIds.has(row.id));
       if (row.kind==="DAILY") records.activities.push(row.payload as DailyActivity);
       if (row.kind==="APPLICATIONS") records.applications.push(row.payload as NurseryRecords["applications"][number]);
       if (row.kind==="MONITORING") records.monitoring.push(row.payload as NurseryRecords["monitoring"][number]);
