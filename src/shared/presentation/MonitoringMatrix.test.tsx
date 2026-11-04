@@ -6,6 +6,20 @@ const records: MonitoringRecord[] = [
   {id:"a",date:"2026-08-01",responsible:"Ana",groups:[{id:"watering",criteria:[{index:0,status:"FAIL",observations:"Revisar riego"}]}]},
   {id:"b",date:"2026-09-01",responsible:"Luis",groups:[]},
 ];
+it("abre solo fichas sin calificación y conserva el período y el detalle", () => {
+  render(<MonitoringSection records={[...records,{id:"na",date:"2026-09-02",responsible:"No aplica",groups:[{id:"watering",criteria:[{index:0,status:"NOT_APPLICABLE"}]}]}]}/>);
+  fireEvent.change(screen.getByLabelText("Desde"),{target:{value:"2026-09-01"}});
+  fireEvent.click(screen.getByRole("button",{name:/Fichas sin calificación/}));
+  const table=screen.getByRole("table",{name:"Historial de fichas sin calificación"});
+  expect(within(table).getAllByRole("row")).toHaveLength(2);
+  expect(within(table).getByText("Luis")).toBeInTheDocument();
+  expect(within(table).queryByText("No aplica")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"Ver ficha del 2026-09-01 y exportar"}));
+  expect(screen.getByRole("dialog",{name:"Ficha de monitoreo"})).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"Cerrar ficha"}));
+  fireEvent.click(screen.getByRole("button",{name:/Volver al resumen/}));
+  expect(screen.getByLabelText("Desde")).toHaveValue("2026-09-01");
+});
 it("abre solo las evaluaciones del proceso sin navegar al historial", () => {
   render(<MonitoringSection records={records}/>);
   fireEvent.click(screen.getByRole("button",{name:/^Riego/}));
