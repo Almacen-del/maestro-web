@@ -4,7 +4,7 @@ import type {DocumentKind, NurseryDocument, NurseryRecords, NurseryRepository} f
 import type {DailyActivity} from "../domain/DailyActivityContract";
 import type {InventoryPeriod} from "../domain/InventoryHistory";
 
-type Table = "vivero_locations" | "vivero_lines" | "vivero_inventory_effective" | "vivero_inventory_periods" | "vivero_inventory_history" | "vivero_lots" | "vivero_lot_lines" | "vivero_documents";
+type Table = "vivero_locations" | "vivero_lines" | "vivero_inventory_effective" | "vivero_inventory_periods" | "vivero_inventory_history" | "vivero_lots" | "vivero_lot_lines" | "vivero_documents" | "vivero_monitoring_history";
 interface Stamp {id: string; version: number; updated_by: string; updated_at: string}
 interface LocationRow extends Stamp {parent_id: string | null; code: string; display_name: string; type: string; sort_order: number; active: boolean}
 interface LineRow extends Stamp {location_id: string; code: string; display_name: string; sort_order: number; active: boolean}
@@ -183,6 +183,10 @@ export class SupabaseNurseryRepository implements NurseryRepository {
   }
   async listNurseryRecords(kind?: DocumentKind): Promise<NurseryRecords> {
     const rows = await this.rows<DocumentRow>("vivero_documents",kind ? {kind} : {});
+    if (!kind || kind === "MONITORING") {
+      const data = await this.rows<DocumentRow>("vivero_monitoring_history",{},"id,record_date,payload");
+      for (const history of data) rows.push({...history,kind:"MONITORING"} as DocumentRow);
+    }
     const records = {activities:[] as DailyActivity[],applications:[] as NurseryRecords["applications"][number][],
       monitoring:[] as NurseryRecords["monitoring"][number][],grafting:[] as NurseryRecords["grafting"][number][]};
     for (const row of rows) {

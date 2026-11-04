@@ -28,6 +28,8 @@ export function monitoringPages(sheets:SheetTemplate[],record:MonitoringRecord):
  const s=sheets[0]!;const cells:Cells={C5:excelDate(record.date),C6:record.responsible,C55:record.director,A57:record.observations};
  const map={weeding:[11,3,14,6,9],watering:[19,2,21,7,10],fertilization:[28,2,30,7,10],delivery:[34,4,38,7,10],seed:[41,3,44,6,9],transplant:[49,5,54,7,10]} as const;
  for(const g of record.groups){const [start,count,notes,treatment,observation]=map[g.id];cells[`B${notes}`]=[g.observations,g.fields?.map(f=>`${f.label}: ${f.value}`).join('\n')].filter(Boolean).join('\n');for(const c of g.criteria){if(c.index<0||c.index>=count)throw new Error('Criterio fuera del formato');const r=start+c.index;cells[`C${r}`]=c.status==='PASS'?'X':null;cells[`D${r}`]=c.status==='FAIL'?'X':null;cells[`E${r}`]=c.status==='NOT_APPLICABLE'?'X':null;['CORRECTION','RETURN','CONCESSION'].forEach((t,i)=>{cells[`${columns(treatment,3)[i]}${r}`]=c.treatments?.some(v=>v===t)?'X':null;});cells[`${columns(observation,1)[0]}${r}`]=c.observations;}}
+ const fieldCells:Record<string,Record<string,string>>={watering:{'Cantidad de agua por planta':'C16'},fertilization:{'Cantidad por planta / unidad':'C23','Dosis':'G24','Producto':'C25','Plantas / cama fertilizadas':'J25'},delivery:{'Cantidad de plantas':'C31'}};
+ for(const group of record.groups)for(const field of group.fields??[]){const target=fieldCells[group.id]?.[field.label]??(group.id==='transplant'&&field.label.toUpperCase().includes('CANTIDAD')?'C46':undefined);if(target)cells[target]=field.value;}
  return [{name:`monitoreo-${record.id}`,cells:{[s.path]:cells}}];
 }
 export function inventoryPages(sheets:SheetTemplate[],catalog:ManageableCatalogData,lines:readonly ManageableCatalogLine[]):ExportPage[]{

@@ -17,6 +17,14 @@ function setup(data: Record<string,unknown[]>) {
   return {repo:new SupabaseNurseryRepository(client),fetcher,client};
 }
 describe("Repositorio Vivero",()=>{
+  it("integra históricos de monitoreo conservando responsable, fecha y criterios sin evaluar",async()=>{
+    const payload={id:"historico-monitoreo-2026-06-08",date:"2026-06-08",responsible:"Responsable original",groups:[{id:"watering",criteria:[{index:0,status:"UNASSESSED"}]}]};
+    const {repo,fetcher}=setup({vivero_monitoring_history:[{id:payload.id,record_date:payload.date,payload}]});
+    expect((await repo.listNurseryRecords("MONITORING")).monitoring).toEqual([payload]);
+    fetcher.mockClear();
+    expect((await repo.listNurseryRecords("APPLICATIONS")).monitoring).toEqual([]);
+    expect(fetcher.mock.calls.some(([url])=>String(url).includes("vivero_monitoring_history"))).toBe(false);
+  });
   it("consulta únicamente tablas vivero y distingue cero de ausencia de inventario",async()=>{
     const {repo,fetcher}=setup({
       vivero_locations:[{id:"bed",code:"C1",display_name:"Cama 1",type:"CAMA",sort_order:1,active:true,version:1}],
