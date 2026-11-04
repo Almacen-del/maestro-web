@@ -7,6 +7,14 @@ const records: readonly ApplicationRecord[] = [
   {id: "two", date: "2026-08-03", location: "Jardín clonal", product: "Producto de prueba B", dosePerLiter: "NOT_APPLICABLE", unit: "g", waterLiters: "NOT_APPLICABLE", totalDose: 0, applicationType: "Edáfica", executor: "Ejecutor C"},
 ];
 
+it("muestra la procedencia del histórico sin atribuirlo a un usuario del celular", () => {
+  render(<ApplicationsSection records={[{...records[0]!,recordedBy:undefined,lines:"6-12",source:{file:"original.xlsx",sheet:"PV-F-001",row:32,columns:{E:"6-12"}}}]} />);
+  fireEvent.click(screen.getByRole("button", {name:"Ver detalle one"}));
+  expect(screen.getByText("original.xlsx · Hoja PV-F-001 · Fila 32")).toBeInTheDocument();
+  expect(screen.getByText("6-12")).toBeInTheDocument();
+  expect(screen.getByText("No disponible")).toBeInTheDocument();
+});
+
 it("adapta el historial principal sin añadir una planilla", () => {
   render(<ApplicationsSection records={records} />);
   expect(screen.queryByRole("button", {name: "Planilla PV-F-001"})).not.toBeInTheDocument();

@@ -16,7 +16,10 @@ export function dailyPages(sheets:SheetTemplate[],items:readonly DailyActivity[]
 }
 export function applicationPages(sheets:SheetTemplate[],items:readonly ApplicationRecord[]):ExportPage[]{
  const s=sheets[0]!;const pages:ExportPage[]=[];const q=(v:number|'NOT_APPLICABLE'|undefined)=>v==='NOT_APPLICABLE'?'N/A':v;
- for(let offset=0;offset<items.length;offset+=s.capacity!){const cells:Cells={};items.slice(offset,offset+s.capacity!).forEach((a,i)=>row(cells,s.start!+i,[excelDate(a.date),a.time,a.location,a.beds,a.lines,a.product,a.activeIngredient,q(a.dosePerLiter),a.unit,q(a.waterLiters),q(a.totalDose),a.applicationType,a.objective,a.executor,[a.observations,a.recordedBy?`Registrado por: ${a.recordedBy}`:''].filter(Boolean).join('\n')]));pages.push({name:'aplicaciones',cells:{[s.path]:cells}});}return pages;
+ for(let offset=0;offset<items.length;offset+=s.capacity!){const cells:Cells={};items.slice(offset,offset+s.capacity!).forEach((a,i)=>{
+   const original=a.source?.columns;
+   row(cells,s.start!+i,original ? [excelDate(a.date),...['B','C','D','E','F','G','H','I','J','K','L','M','N','O'].map(key=>original[key])] : [excelDate(a.date),a.time,a.location,a.beds,a.lines,a.product,a.activeIngredient,q(a.dosePerLiter),a.unit,q(a.waterLiters),q(a.totalDose),a.applicationType,a.objective,a.executor,[a.observations,a.recordedBy?`Registrado por: ${a.recordedBy}`:''].filter(Boolean).join('\n')]);
+ });pages.push({name:'aplicaciones',cells:{[s.path]:cells}});}return pages;
 }
 export function graftPages(sheets:SheetTemplate[],record:GraftingRecord):ExportPage[]{
  const s=sheets[0]!;const pages:ExportPage[]=[];

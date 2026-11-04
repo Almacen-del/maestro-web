@@ -24,6 +24,12 @@ export interface ApplicationRecord {
   readonly executor: string;
   readonly recordedBy?: string;
   readonly observations?: string;
+  readonly source?: {
+    readonly file: string;
+    readonly sheet: string;
+    readonly row: number;
+    readonly columns: Readonly<Record<string, string | number | null>>;
+  };
 }
 
 const quantity = (value: number | "NOT_APPLICABLE" | undefined, unit = "") =>
@@ -67,7 +73,7 @@ export function ApplicationsSection({records}: {readonly records?: readonly Appl
     </div>
     <div className="agro-history"><h2>Historial de intervenciones</h2><p>Productos registrados y trazabilidad operativa</p><div className="agro-table-scroll"><table><thead><tr>{["Fecha / ubicación","Producto / objetivo","Ejecutor","Dosis / mezcla","Detalle"].map(label => <th key={label}>{label}</th>)}</tr></thead><tbody>{selected?.slice(0,limit).map(record => <tr key={record.id}><td><strong>{dateLabel(record.date)} · {record.time || "Hora no registrada"}</strong><small>{record.location}{record.beds ? ` · Camas ${record.beds}` : ""} {record.lines ? `· Líneas ${record.lines}` : ""}</small></td><td><strong>{record.product}</strong><small>{record.applicationType} · {record.objective || "Objetivo no registrado"}</small><small>{record.activeIngredient || "Ingrediente no registrado"}</small></td><td>{record.executor || "No registrado"}</td><td><strong>{quantity(record.dosePerLiter, record.unit ? `${record.unit}/L` : "")}</strong><small>Agua: {quantity(record.waterLiters,"L")}</small><small>Producto: {quantity(record.totalDose,record.unit)}</small></td><td><button aria-label={`Ver detalle ${record.id}`} aria-expanded={detailId === record.id} onClick={() => setDetailId(detailId === record.id ? undefined : record.id)}>Ver detalle ↗</button></td></tr>)}</tbody></table></div><footer><span>{Math.min(limit,selected?.length ?? 0)} de {selected?.length ?? 0} registros</span>{(selected?.length ?? 0)>limit && <button onClick={() => setLimit(limit+10)}>Mostrar 10 más</button>}</footer></div>
     <aside className="agro-detail-panel" aria-label="Detalle de la intervención"><div className="agro-detail-title"><h2>Detalle de la intervención</h2>{detailId && <button aria-label="Cerrar detalle" onClick={() => setDetailId(undefined)}>×</button>}</div>
-    {records === undefined ? <div className="applications-empty" role="status"><h2>Aplicaciones registradas desde el celular</h2><p>La vista está preparada. Los registros aparecerán cuando se conecte la aplicación Android.</p><p>El Excel se usó como formato de referencia; su historial no se ha importado.</p></div> : selected?.length === 0 ? <p className="applications-empty" role="status">No hay registros para estos filtros.</p> : <div className="applications-list">{!selected?.some(record => record.id === detailId) && <p className="agro-detail-placeholder">Selecciona «Ver detalle» en el historial para consultar el producto, las dosis y las observaciones.</p>}{selected?.filter(record => record.id === detailId).map((record) => <details className="application-card" key={record.id} open>
+    {records === undefined ? <div className="applications-empty" role="status"><h2>Consulta de aplicaciones</h2><p>Conecta la sesión para consultar el histórico y los registros enviados desde el celular.</p></div> : selected?.length === 0 ? <p className="applications-empty" role="status">No hay registros para estos filtros.</p> : <div className="applications-list">{!selected?.some(record => record.id === detailId) && <p className="agro-detail-placeholder">Selecciona «Ver detalle» en el historial para consultar el producto, las dosis y las observaciones.</p>}{selected?.filter(record => record.id === detailId).map((record) => <details className="application-card" key={record.id} open>
       <summary><span className="application-date">{dateLabel(record.date)}<small>{record.time || "Hora no registrada"}</small></span><span className="application-product"><strong>{record.product}</strong><small>{record.location}{record.beds ? ` · Camas: ${record.beds}` : ""}{record.lines ? ` · Líneas: ${record.lines}` : ""}</small></span><span className="applications-badge">{record.applicationType || "Tipo no registrado"}</span><span className="application-executor">{record.executor || "Ejecutor no registrado"}</span></summary>
       <div className="application-detail"><dl>
         <div><dt>Fecha</dt><dd>{dateLabel(record.date)}</dd></div>
@@ -85,6 +91,7 @@ export function ApplicationsSection({records}: {readonly records?: readonly Appl
         <div><dt>Objetivo del insumo</dt><dd>{record.objective || "No registrado"}</dd></div>
         <div><dt>Ejecutor de la aplicación</dt><dd>{record.executor || "No registrado"}</dd></div>
         <div><dt>Registrado por</dt><dd>{record.recordedBy || "No disponible"}</dd></div>
+        {record.source && <div><dt>Documento de origen</dt><dd>{record.source.file} · Hoja {record.source.sheet} · Fila {record.source.row}</dd></div>}
       </dl><div className="application-observations"><h3>Observaciones</h3><p>{record.observations || "Sin observaciones registradas"}</p></div></div>
     </details>)}</div>}
     </aside>

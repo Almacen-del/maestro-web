@@ -17,6 +17,16 @@ function setup(data: Record<string,unknown[]>) {
   return {repo:new SupabaseNurseryRepository(client),fetcher,client};
 }
 describe("Repositorio Vivero",()=>{
+  it("combina aplicaciones móviles e históricas publicadas conservando su origen",async()=>{
+    const payload={id:"historical",date:"2026-07-07",product:"Producto original",location:"Módulo 1",applicationType:"Foliar",executor:"Ejecutor",dosePerLiter:"NOT_APPLICABLE",source:{file:"original.xlsx",sheet:"PV-F-001",row:5,columns:{H:"N.A"}}};
+    const mobile={...payload,id:"mobile",source:undefined};
+    const {repo,fetcher}=setup({vivero_applications_history:[{id:payload.id,record_date:payload.date,payload,published:true},{id:"hidden",payload,published:false}],vivero_documents:[{id:"mobile",kind:"APPLICATIONS",payload:mobile}]});
+    expect((await repo.listNurseryRecords("APPLICATIONS")).applications).toEqual([mobile,payload]);
+    expect(fetcher.mock.calls.some(([url])=>String(url).includes("published=eq.true"))).toBe(true);
+    fetcher.mockClear();
+    await repo.listNurseryRecords("DAILY");
+    expect(fetcher.mock.calls.some(([url])=>String(url).includes("vivero_applications_history"))).toBe(false);
+  });
   it("lee las 1133 filas históricas publicadas sin truncar y consulta por fecha",async()=>{
     const history=Array.from({length:1133},(_,i)=>({id:`h${i}`,record_date:i<2?"2026-11-03":"2026-01-01",published:true,payload:{id:`h${i}`,date:i<2?"2026-11-03":"2026-01-01",title:"Riego",start:"",end:"",location:"M1",collaborators:["Colaborador"],notes:"",quantity:i===0?undefined:0}}));
     const {repo,fetcher}=setup({vivero_daily_history:[...history,{...history[0],id:"not-published",published:false}]});

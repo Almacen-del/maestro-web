@@ -6,6 +6,12 @@ import {fillTemplate,type SheetTemplate} from './OfficialExport';
 import {dailyPages,applicationPages,graftPages,monitoringPages,inventoryPages} from './officialExportMappings';
 import {demoData} from './DemoNursery';
 describe('Exportaciones oficiales',()=>{
+ it('exporta las quince columnas históricas de aplicaciones sin perder texto, ceros ni vacíos',()=>{
+   const sheets=[{name:'PV-F-001',path:'sheet.xml',allowed:[],start:5,capacity:20}];
+   const [page]=applicationPages(sheets,[{id:'history',date:'2026-07-22',product:'Producto',location:'Módulo 1',executor:'Ejecutor',applicationType:'Foliar',dosePerLiter:2,source:{file:'original.xlsx',sheet:'PV-F-001',row:22,columns:{B:'6:00 am',C:'M1',D:1.2,E:'6-12',F:'Producto original',G:null,H:'2 ml',I:'ml',J:0,K:'N.A',L:'Foliar',M:null,N:'Ejecutor original',O:'Nota original'}}}]);
+   expect(Object.keys(page!.cells['sheet.xml']!)).toHaveLength(15);
+   expect(page?.cells['sheet.xml']).toMatchObject({B5:'6:00 am',C5:'M1',D5:1.2,E5:'6-12',F5:'Producto original',G5:null,H5:'2 ml',I5:'ml',J5:0,K5:'N.A',L5:'Foliar',M5:null,N5:'Ejecutor original',O5:'Nota original'});
+ });
  it('exporta las once columnas originales del histórico sin convertir vacíos en cero',()=>{
    const sheets=[{name:'2026',path:'sheet.xml',allowed:[],start:5,capacity:20}];
    const [page]=dailyPages(sheets,[{id:'history',date:'2026-11-03',title:'Riego',start:'',end:'',location:'Módulo 1 · Cama 2',collaborators:['Ana'],notes:'',source:{file:'original.xlsx',sheet:'2026',row:7,columns:{B:'Ana',C:'riego',D:null,E:'12:10 p.m',F:'M1',G:2,H:24,I:1,J:null,K:'Observación original'}}}]);
