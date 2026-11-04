@@ -15,7 +15,7 @@ it("conserva las mediciones antiguas sin inventar cinco calificaciones pendiente
   expect(screen.getByText("Muestra 1 · Pág. 3")).toBeInTheDocument();
   expect(screen.getByText(/Grosor registrado: 6,8 mm/)).toBeInTheDocument();
   expect(screen.getByText("Cumple",{selector:".grafting-result"})).toBeInTheDocument();
-  expect(screen.queryByRole("heading",{name:"Injerto",exact:true})).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading",{name:/^Injerto$/})).not.toBeInTheDocument();
 });
 it("las recolecciones antiguas no generan criterios ficticios y el total incompleto se identifica como subtotal",()=>{
   const historical={...records[1]!,yemaCollections:records[1]!.yemaCollections.map((b,i)=>({...b,sourceLayout:"BUD_COLLECTIONS" as const,yemaQuantity:i?null:16})),source:{file:"original.pdf",sha256:"a".repeat(64),version:"001",pages:[1],layout:"BUD_COLLECTIONS" as const}};
