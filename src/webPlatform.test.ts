@@ -24,9 +24,11 @@ describe("adaptador de navegador", () => {
   it("conserva CSP acotada y no depende de Electron", () => {
     const html = readFileSync("index.html", "utf8");
     const vercel = readFileSync("vercel.json", "utf8");
-    for (const endpoint of ["identitytoolkit.googleapis.com", "securetoken.googleapis.com", "firestore.googleapis.com", "us-central1-viverocontrol-3f83f.cloudfunctions.net", "127.0.0.1:9099", "127.0.0.1:8180", "127.0.0.1:5001"]) {
+    for (const endpoint of ["https://gfgsnnweyfryfcqdnlvw.supabase.co", "wss://gfgsnnweyfryfcqdnlvw.supabase.co"]) {
       expect(html).toContain(endpoint);
+      expect(vercel).toContain(endpoint);
     }
+    expect(html).not.toMatch(/googleapis|cloudfunctions|9099|8180|5001/);
     expect(html).not.toMatch(/unsafe-eval|connect-src https:|\*\./);
     expect(html).toContain("script-src 'self'");
     expect(vercel).toContain("frame-ancestors 'none'");
